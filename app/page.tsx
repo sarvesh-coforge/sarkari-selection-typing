@@ -20,6 +20,7 @@ interface ExamPattern {
   minSpeedEnglish?: number;
   minSpeedHindi?: number;
   qualification?: string;
+  defaultOfficialUrl: string;
 }
 
 interface ExamHistoryItem {
@@ -49,6 +50,35 @@ interface TestStats {
   elapsedSec: number;
 }
 
+interface IPortalItem {
+  title: string;
+  officialUrl: string;
+  url?: string;
+  category: string;
+  badge?: string;
+  matchedExamIds?: string[];
+}
+
+interface IVersionSummary {
+  versionNumber: number;
+  status: string;
+  fetchedAt: string;
+  itemCount: number;
+}
+
+interface PortalDataResponse {
+  success: boolean;
+  current: {
+    versionNumber: number;
+    sourceUrl?: string;
+    status: string;
+    fetchedAt: string;
+    items: IPortalItem[];
+  } | null;
+  versions: IVersionSummary[];
+  autoSynced?: boolean;
+}
+
 const sampleParagraphs: Record<Language, string> = {
   english:
     "Typing speed is an essential asset in the modern digital era. Whether you are working in a corporate office or preparing for government competitive examinations, having good speed and accuracy saves enormous time and increases productivity. Consistent daily practice on structured paragraphs builds keyboard muscle memory effortlessly.",
@@ -68,36 +98,36 @@ const examParagraphTemplates = {
 };
 
 const examPatterns: ExamPattern[] = [
-  { id: "ssc_chsl", minSpeedEnglish: 35, minSpeedHindi: 30, qualification: "Minimum 35 WPM English / 30 WPM Hindi", name: "SSC CHSL – LDC / JSA", category: "central", duration: 10, speed: "35 WPM English / 30 WPM Hindi", language: "English / Hindi", font: "Hindi: Mangal / as notified", note: "Typing Test • 10 min", icon: "fa-building-columns" },
-  { id: "ssc_cgl_dest", name: "SSC CGL – DEST (selected posts)", category: "central", duration: 15, speed: "DEST / 15-minute test", language: "English", font: "Computer", note: "DEST for applicable posts", icon: "fa-chart-column" },
-  { id: "ssc_steno", name: "SSC Stenographer Grade C & D", category: "central", duration: 10, speed: "100 WPM Grade C / 80 WPM Grade D dictation", language: "English / Hindi", font: "Computer transcription", note: "Stenography + transcription", icon: "fa-keyboard" },
-  { id: "ssc_selection", name: "SSC Selection Post – typing posts", category: "central", duration: 10, speed: "Post-specific", language: "English / Hindi", font: "Computer", note: "Post-dependent skill test", icon: "fa-list-check" },
-  { id: "rrb_ntpc", minSpeedEnglish: 30, minSpeedHindi: 25, qualification: "Minimum 30 WPM English / 25 WPM Hindi", name: "RRB NTPC – JAA-cum-Typist / Sr. Clerk-cum-Typist", category: "railway", duration: 10, speed: "30 WPM English / 25 WPM Hindi", language: "English / Hindi", font: "Hindi: KrutiDev / Mangal", note: "CBTST • 1 min practice + 30 sec break + 10 min test", icon: "fa-train" },
-  { id: "rrb_ministerial", name: "RRB Ministerial & Isolated Categories – typing posts", category: "railway", duration: 10, speed: "Post-specific", language: "English / Hindi", font: "Computer", note: "Post-dependent typing/skill test", icon: "fa-train-subway" },
-  { id: "india_post_pa_sa", name: "India Post – Postal Assistant / Sorting Assistant", category: "central", duration: 10, speed: "Typing/skill standard as notified", language: "English / Hindi", font: "Computer", note: "Skill test where prescribed", icon: "fa-envelope" },
-  { id: "epfo_ssa", name: "EPFO Social Security Assistant (SSA)", category: "central", duration: 10, speed: "Computer typing standard as notified", language: "English / Hindi", font: "Computer", note: "Computer skill / typing", icon: "fa-landmark" },
-  { id: "esic_udc", name: "ESIC UDC / clerical typing posts", category: "institute", duration: 10, speed: "35 WPM English / 30 WPM Hindi", language: "English / Hindi", font: "Computer", note: "Typing Skill Test", icon: "fa-hospital" },
-  { id: "aiims_cre_ja", name: "AIIMS CRE – JAA / LDC / UDC", category: "institute", duration: 10, speed: "35 WPM English / 30 WPM Hindi", language: "English / Hindi", font: "Computer", note: "Qualifying typing skill", icon: "fa-hospital-user" },
-  { id: "dsssb_ja_ldc", minSpeedEnglish: 35, minSpeedHindi: 30, qualification: "Reference standard: 35 WPM English / 30 WPM Hindi", name: "DSSSB – Grade IV / Junior Assistant / LDC", category: "state", duration: 10, speed: "Post-specific typing standard", language: "English / Hindi", font: "Computer", note: "Typing Skill Test", icon: "fa-city" },
-  { id: "delhi_police_hcm", minSpeedEnglish: 30, minSpeedHindi: 25, qualification: "Minimum speed depends on the notified test/post", name: "Delhi Police Head Constable (Ministerial)", category: "police", duration: 10, speed: "Typing / computer standard as notified", language: "English / Hindi", font: "Computer", note: "Typing-related skill test", icon: "fa-shield-halved" },
-  { id: "delhi_hc_jja", minSpeedEnglish: 40, qualification: "Reference pattern: 40 WPM English", name: "Delhi High Court – Junior Judicial Assistant / Restorer", category: "court", duration: 10, speed: "40 WPM English (pattern reference)", language: "English", font: "Computer", note: "Typing Test", icon: "fa-scale-balanced" },
-  { id: "allahabad_hc", name: "Allahabad High Court – RO / ARO & typing posts", category: "court", duration: 15, speed: "Post-specific; English/Hindi requirements vary", language: "English / Hindi", font: "KrutiDev / Mangal where prescribed", note: "Computer/typing test", icon: "fa-scale-balanced" },
-  { id: "upsssc_ja", name: "UPSSSC Junior Assistant", category: "state", duration: 15, speed: "Post/notification-specific Hindi typing", language: "Hindi / English", font: "Computer", note: "Typing Test", icon: "fa-flag" },
-  { id: "uppsc_computer_assistant", name: "UPPSC Computer Assistant", category: "state", duration: 15, speed: "Type Test as notified", language: "English / Hindi", font: "Computer", note: "Type Test", icon: "fa-keyboard" },
-  { id: "up_police_asi_clerk", name: "UP Police ASI (Clerk) / ministerial posts", category: "police", duration: 10, speed: "Typing/skill standard as notified", language: "Hindi / English", font: "Computer", note: "Typing-related skill test", icon: "fa-shield" },
-  { id: "punjab_hc_clerk", name: "Punjab & Haryana High Court – Clerk", category: "court", duration: 10, speed: "Typing/Computer Test", language: "English", font: "Computer", note: "Typing/Computer Test", icon: "fa-scale-balanced" },
-  { id: "phhc_steno_typist", name: "Punjab & Haryana High Court – Steno Typist", category: "court", duration: 10, speed: "Steno/typing standard as notified", language: "English", font: "Computer", note: "Steno + typing", icon: "fa-keyboard" },
-  { id: "bihar_clerk", name: "Bihar – Clerk / LDC typing recruitments", category: "state", duration: 10, speed: "Post-specific", language: "English / Hindi", font: "Computer", note: "Typing/skill test where prescribed", icon: "fa-flag" },
-  { id: "rajasthan_lsa", name: "Rajasthan – LDC / Junior Assistant", category: "state", duration: 10, speed: "Hindi/English typing standard as notified", language: "Hindi / English", font: "Computer", note: "Typing Test", icon: "fa-flag" },
-  { id: "haryana_clerk", name: "Haryana – Clerk / Typist recruitments", category: "state", duration: 10, speed: "Post-specific", language: "English / Hindi", font: "Computer", note: "Typing/skill test where prescribed", icon: "fa-flag" },
-  { id: "punjab_sssb_clerk", name: "Punjab SSSB – Clerk / typing posts", category: "state", duration: 10, speed: "Post-specific", language: "English / Punjabi", font: "Computer", note: "Typing/skill test where prescribed", icon: "fa-flag" },
-  { id: "mp_high_court_ag3", name: "MP High Court – Assistant Grade-3 / typing posts", category: "court", duration: 10, speed: "Typing standard as notified", language: "Hindi / English", font: "Computer", note: "Typing Test", icon: "fa-scale-balanced" },
-  { id: "mp_cpct", name: "Madhya Pradesh – CPCT-based clerical recruitments", category: "state", duration: 15, speed: "CPCT typing/skill standard", language: "English / Hindi", font: "Computer", note: "CPCT / typing", icon: "fa-keyboard" },
-  { id: "nvs_junior_secretariat", name: "NVS – Junior Secretariat Assistant", category: "institute", duration: 10, speed: "Typing standard as notified", language: "English / Hindi", font: "Computer", note: "Typing/skill test", icon: "fa-school" },
-  { id: "kvs_junior_secretariat", name: "KVS – Junior Secretariat Assistant", category: "institute", duration: 10, speed: "Typing standard as notified", language: "English / Hindi", font: "Computer", note: "Typing/skill test", icon: "fa-school" },
-  { id: "csir_jsa", name: "CSIR – Junior Secretariat Assistant (JSA)", category: "institute", duration: 10, speed: "Computer typing proficiency as notified", language: "English / Hindi", font: "Hindi: Mangal where prescribed", note: "Qualifying typing test", icon: "fa-flask" },
-  { id: "court_clerical", name: "District Courts – Clerk / JJA / Typist recruitments", category: "court", duration: 10, speed: "Court-specific typing standard", language: "English / Hindi / regional", font: "Computer", note: "Typing Test", icon: "fa-gavel" },
-  { id: "departmental_ldc", name: "Central Govt Departmental – LDC / JSA / UDC tests", category: "central", duration: 10, speed: "35 WPM English / 30 WPM Hindi where prescribed", language: "English / Hindi", font: "Computer", note: "Departmental typewriting test", icon: "fa-folder-open" },
+  { id: "ssc_chsl", minSpeedEnglish: 35, minSpeedHindi: 30, qualification: "Minimum 35 WPM English / 30 WPM Hindi", name: "SSC CHSL – LDC / JSA", category: "central", duration: 10, speed: "35 WPM English / 30 WPM Hindi", language: "English / Hindi", font: "Hindi: Mangal / as notified", note: "Typing Test • 10 min", icon: "fa-building-columns", defaultOfficialUrl: "https://ssc.gov.in/" },
+  { id: "ssc_cgl_dest", name: "SSC CGL – DEST (selected posts)", category: "central", duration: 15, speed: "DEST / 15-minute test", language: "English", font: "Computer", note: "DEST for applicable posts", icon: "fa-chart-column", defaultOfficialUrl: "https://ssc.gov.in/" },
+  { id: "ssc_steno", name: "SSC Stenographer Grade C & D", category: "central", duration: 10, speed: "100 WPM Grade C / 80 WPM Grade D dictation", language: "English / Hindi", font: "Computer transcription", note: "Stenography + transcription", icon: "fa-keyboard", defaultOfficialUrl: "https://ssc.gov.in/" },
+  { id: "ssc_selection", name: "SSC Selection Post – typing posts", category: "central", duration: 10, speed: "Post-specific", language: "English / Hindi", font: "Computer", note: "Post-dependent skill test", icon: "fa-list-check", defaultOfficialUrl: "https://ssc.gov.in/" },
+  { id: "rrb_ntpc", minSpeedEnglish: 30, minSpeedHindi: 25, qualification: "Minimum 30 WPM English / 25 WPM Hindi", name: "RRB NTPC – JAA-cum-Typist / Sr. Clerk-cum-Typist", category: "railway", duration: 10, speed: "30 WPM English / 25 WPM Hindi", language: "English / Hindi", font: "Hindi: KrutiDev / Mangal", note: "CBTST • 1 min practice + 30 sec break + 10 min test", icon: "fa-train", defaultOfficialUrl: "https://www.rrbcdg.gov.in/" },
+  { id: "rrb_ministerial", name: "RRB Ministerial & Isolated Categories – typing posts", category: "railway", duration: 10, speed: "Post-specific", language: "English / Hindi", font: "Computer", note: "Post-dependent typing/skill test", icon: "fa-train-subway", defaultOfficialUrl: "https://www.rrbcdg.gov.in/" },
+  { id: "india_post_pa_sa", name: "India Post – Postal Assistant / Sorting Assistant", category: "central", duration: 10, speed: "Typing/skill standard as notified", language: "English / Hindi", font: "Computer", note: "Skill test where prescribed", icon: "fa-envelope", defaultOfficialUrl: "https://indiapostgdsonline.gov.in/" },
+  { id: "epfo_ssa", name: "EPFO Social Security Assistant (SSA)", category: "central", duration: 10, speed: "Computer typing standard as notified", language: "English / Hindi", font: "Computer", note: "Computer skill / typing", icon: "fa-landmark", defaultOfficialUrl: "https://www.epfindia.gov.in/" },
+  { id: "esic_udc", name: "ESIC UDC / clerical typing posts", category: "institute", duration: 10, speed: "35 WPM English / 30 WPM Hindi", language: "English / Hindi", font: "Computer", note: "Typing Skill Test", icon: "fa-hospital", defaultOfficialUrl: "https://www.esic.gov.in/" },
+  { id: "aiims_cre_ja", name: "AIIMS CRE – JAA / LDC / UDC", category: "institute", duration: 10, speed: "35 WPM English / 30 WPM Hindi", language: "English / Hindi", font: "Computer", note: "Qualifying typing skill", icon: "fa-hospital-user", defaultOfficialUrl: "https://www.aiimsexams.ac.in/" },
+  { id: "dsssb_ja_ldc", minSpeedEnglish: 35, minSpeedHindi: 30, qualification: "Reference standard: 35 WPM English / 30 WPM Hindi", name: "DSSSB – Grade IV / Junior Assistant / LDC", category: "state", duration: 10, speed: "Post-specific typing standard", language: "English / Hindi", font: "Computer", note: "Typing Skill Test", icon: "fa-city", defaultOfficialUrl: "https://dsssb.delhi.gov.in/" },
+  { id: "delhi_police_hcm", minSpeedEnglish: 30, minSpeedHindi: 25, qualification: "Minimum speed depends on the notified test/post", name: "Delhi Police Head Constable (Ministerial)", category: "police", duration: 10, speed: "Typing / computer standard as notified", language: "English / Hindi", font: "Computer", note: "Typing-related skill test", icon: "fa-shield-halved", defaultOfficialUrl: "https://delhipolice.gov.in/" },
+  { id: "delhi_hc_jja", minSpeedEnglish: 40, qualification: "Reference pattern: 40 WPM English", name: "Delhi High Court – Junior Judicial Assistant / Restorer", category: "court", duration: 10, speed: "40 WPM English (pattern reference)", language: "English", font: "Computer", note: "Typing Test", icon: "fa-scale-balanced", defaultOfficialUrl: "https://delhihighcourt.nic.in/" },
+  { id: "allahabad_hc", name: "Allahabad High Court – RO / ARO & typing posts", category: "court", duration: 15, speed: "Post-specific; English/Hindi requirements vary", language: "English / Hindi", font: "KrutiDev / Mangal where prescribed", note: "Computer/typing test", icon: "fa-scale-balanced", defaultOfficialUrl: "https://www.allahabadhighcourt.in/" },
+  { id: "upsssc_ja", name: "UPSSSC Junior Assistant", category: "state", duration: 15, speed: "Post/notification-specific Hindi typing", language: "Hindi / English", font: "Computer", note: "Typing Test", icon: "fa-flag", defaultOfficialUrl: "https://upsssc.gov.in/" },
+  { id: "uppsc_computer_assistant", name: "UPPSC Computer Assistant", category: "state", duration: 15, speed: "Type Test as notified", language: "English / Hindi", font: "Computer", note: "Type Test", icon: "fa-keyboard", defaultOfficialUrl: "https://uppsc.up.nic.in/" },
+  { id: "up_police_asi_clerk", name: "UP Police ASI (Clerk) / ministerial posts", category: "police", duration: 10, speed: "Typing/skill standard as notified", language: "Hindi / English", font: "Computer", note: "Typing-related skill test", icon: "fa-shield", defaultOfficialUrl: "https://uppbpb.gov.in/" },
+  { id: "punjab_hc_clerk", name: "Punjab & Haryana High Court – Clerk", category: "court", duration: 10, speed: "Typing/Computer Test", language: "English", font: "Computer", note: "Typing/Computer Test", icon: "fa-scale-balanced", defaultOfficialUrl: "https://highcourtchd.gov.in/" },
+  { id: "phhc_steno_typist", name: "Punjab & Haryana High Court – Steno Typist", category: "court", duration: 10, speed: "Steno/typing standard as notified", language: "English", font: "Computer", note: "Steno + typing", icon: "fa-keyboard", defaultOfficialUrl: "https://highcourtchd.gov.in/" },
+  { id: "bihar_clerk", name: "Bihar – Clerk / LDC typing recruitments", category: "state", duration: 10, speed: "Post-specific", language: "English / Hindi", font: "Computer", note: "Typing/skill test where prescribed", icon: "fa-flag", defaultOfficialUrl: "https://bssc.bihar.gov.in/" },
+  { id: "rajasthan_lsa", name: "Rajasthan – LDC / Junior Assistant", category: "state", duration: 10, speed: "Hindi/English typing standard as notified", language: "Hindi / English", font: "Computer", note: "Typing Test", icon: "fa-flag", defaultOfficialUrl: "https://hcraj.nic.in/" },
+  { id: "haryana_clerk", name: "Haryana – Clerk / Typist recruitments", category: "state", duration: 10, speed: "Post-specific", language: "English / Hindi", font: "Computer", note: "Typing/skill test where prescribed", icon: "fa-flag", defaultOfficialUrl: "https://hssc.gov.in/" },
+  { id: "punjab_sssb_clerk", name: "Punjab SSSB – Clerk / typing posts", category: "state", duration: 10, speed: "Post-specific", language: "English / Punjabi", font: "Computer", note: "Typing/skill test where prescribed", icon: "fa-flag", defaultOfficialUrl: "https://sssb.punjab.gov.in/" },
+  { id: "mp_high_court_ag3", name: "MP High Court – Assistant Grade-3 / typing posts", category: "court", duration: 10, speed: "Typing standard as notified", language: "Hindi / English", font: "Computer", note: "Typing Test", icon: "fa-scale-balanced", defaultOfficialUrl: "https://mphc.gov.in/" },
+  { id: "mp_cpct", name: "Madhya Pradesh – CPCT-based clerical recruitments", category: "state", duration: 15, speed: "CPCT typing/skill standard", language: "English / Hindi", font: "Computer", note: "CPCT / typing", icon: "fa-keyboard", defaultOfficialUrl: "https://www.cpct.mp.gov.in/" },
+  { id: "nvs_junior_secretariat", name: "NVS – Junior Secretariat Assistant", category: "institute", duration: 10, speed: "Typing standard as notified", language: "English / Hindi", font: "Computer", note: "Typing/skill test", icon: "fa-school", defaultOfficialUrl: "https://navodaya.gov.in/" },
+  { id: "kvs_junior_secretariat", name: "KVS – Junior Secretariat Assistant", category: "institute", duration: 10, speed: "Typing standard as notified", language: "English / Hindi", font: "Computer", note: "Typing/skill test", icon: "fa-school", defaultOfficialUrl: "https://kvsangathan.nic.in/" },
+  { id: "csir_jsa", name: "CSIR – Junior Secretariat Assistant (JSA)", category: "institute", duration: 10, speed: "Computer typing proficiency as notified", language: "English / Hindi", font: "Hindi: Mangal where prescribed", note: "Qualifying typing test", icon: "fa-flask", defaultOfficialUrl: "https://www.csir.res.in/" },
+  { id: "court_clerical", name: "District Courts – Clerk / JJA / Typist recruitments", category: "court", duration: 10, speed: "Court-specific typing standard", language: "English / Hindi / regional", font: "Computer", note: "Typing Test", icon: "fa-gavel", defaultOfficialUrl: "https://main.sci.gov.in/" },
+  { id: "departmental_ldc", name: "Central Govt Departmental – LDC / JSA / UDC tests", category: "central", duration: 10, speed: "35 WPM English / 30 WPM Hindi where prescribed", language: "English / Hindi", font: "Computer", note: "Departmental typewriting test", icon: "fa-folder-open", defaultOfficialUrl: "https://ssc.gov.in/" },
 ];
 
 const tutorLessons: Record<"english" | "krutidev" | "mangal", string[]> = {
@@ -124,6 +154,11 @@ const EXAM_HISTORY_KEY = "rvTypingMasterExamHistoryV2";
 
 export default function RootTypingPortalPage() {
   const [activeTab, setActiveTab] = useState<TabId>("home");
+
+  // Live Portal DB Data
+  const [portalData, setPortalData] = useState<PortalDataResponse | null>(null);
+  const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [showVersionModal, setShowVersionModal] = useState<boolean>(false);
 
   // Mobile menu
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -201,11 +236,41 @@ export default function RootTypingPortalPage() {
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const triggerToast = (msg: string) => {
     setToastMsg(msg);
-    setTimeout(() => setToastMsg(null), 3000);
+    setTimeout(() => setToastMsg(null), 3500);
   };
 
-  // Hydrate exam history from localStorage
+  // Fetch Live Portal Data from MongoDB
+  const fetchPortalData = async () => {
+    try {
+      const res = await fetch("/api/portal-data");
+      const json = await res.json();
+      if (json.success) {
+        setPortalData(json);
+      }
+    } catch (err) {
+      console.warn("Portal data live load failed", err);
+    }
+  };
+
+  const handleManualSync = async () => {
+    setIsSyncing(true);
+    try {
+      const res = await fetch("/api/sync", { method: "POST" });
+      const json = await res.json();
+      if (json.success) {
+        triggerToast(`Live Synced: v${json.version} auto-published (strictly 3 versions max retained in MongoDB)!`);
+        await fetchPortalData();
+      }
+    } catch (err) {
+      console.error("Manual sync error", err);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  // Hydrate exam history from localStorage and load portal data on mount
   useEffect(() => {
+    fetchPortalData();
     try {
       const saved = localStorage.getItem(EXAM_HISTORY_KEY);
       if (saved) {
@@ -263,6 +328,27 @@ export default function RootTypingPortalPage() {
     const isHindi = /hindi/i.test(e.language || "") && !/english/i.test(e.language || "");
     return isHindi ? e.minSpeedHindi || null : e.minSpeedEnglish || null;
   };
+
+  // Live Exam Matches: Map crawled live recruitments with real government URLs
+  const liveMatchedMap = useMemo(() => {
+    const map = new Map<string, { officialUrl: string; title: string; badge?: string }>();
+    if (!portalData?.current?.items) return map;
+
+    for (const item of portalData.current.items) {
+      if (item.matchedExamIds && item.matchedExamIds.length > 0) {
+        for (const examId of item.matchedExamIds) {
+          if (!map.has(examId)) {
+            map.set(examId, {
+              officialUrl: item.officialUrl,
+              title: item.title,
+              badge: item.badge || "Live 2026",
+            });
+          }
+        }
+      }
+    }
+    return map;
+  }, [portalData]);
 
   // Typing Test Stats Calculation
   const calculateTestStats = (): TestStats => {
@@ -499,6 +585,8 @@ export default function RootTypingPortalPage() {
     }
   };
 
+  const currentVersion = portalData?.current?.versionNumber ?? 1;
+
   return (
     <div className="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col justify-between">
       {/* Toast Notification */}
@@ -509,7 +597,7 @@ export default function RootTypingPortalPage() {
         </div>
       )}
 
-      {/* TOP HEADER (Exact RV TypingMaster / Sarkari Selection Navigation Bar) */}
+      {/* TOP HEADER (RV TypingMaster / Sarkari Selection Navigation Bar) */}
       <header className="bg-gradient-to-r from-[#1e3a8a] to-[#1e40af] text-white shadow-md sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
@@ -713,8 +801,19 @@ export default function RootTypingPortalPage() {
               </button>
             </nav>
 
-            {/* Auth & Mobile Actions */}
-            <div className="flex items-center space-x-3 shrink-0">
+            {/* Live DB Status Pill & Auth Actions */}
+            <div className="flex items-center space-x-2.5 shrink-0">
+              {/* Live DB Pill */}
+              <button
+                onClick={() => setShowVersionModal(true)}
+                className="hidden lg:flex items-center space-x-1.5 bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-400/50 text-emerald-300 px-3 py-1.5 rounded-full text-[11px] font-bold cursor-pointer transition shadow-sm"
+                title="Click to view strictly 3 versions retention in MongoDB"
+              >
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                <span>Live DB: v{currentVersion} • 3 Versions Max • Auto-Published</span>
+                <i className="fa-solid fa-database text-[10px] ml-1 text-emerald-400"></i>
+              </button>
+
               <button
                 onClick={() => {
                   setAuthMode("pricing");
@@ -976,10 +1075,96 @@ export default function RootTypingPortalPage() {
         </div>
       )}
 
+      {/* 3-VERSION ROLLING RETENTION MODAL */}
+      {showVersionModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-5 relative">
+            <button
+              onClick={() => setShowVersionModal(false)}
+              className="absolute right-5 top-5 text-slate-400 hover:text-slate-700 text-lg"
+            >
+              <i className="fa-solid fa-xmark"></i>
+            </button>
+
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-lg">
+                <i className="fa-solid fa-database"></i>
+              </div>
+              <div>
+                <h3 className="text-lg font-black text-slate-900">MongoDB 3-Version Rolling Retention</h3>
+                <p className="text-xs text-slate-500">Auto-publish snapshot policy (strictly max 3 retained)</p>
+              </div>
+            </div>
+
+            <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 text-xs text-slate-600 leading-relaxed space-y-1.5">
+              <p>
+                <strong>Auto-Publish Policy:</strong> Every crawl automatically fetches from SarkariResult, publishes the new version, archives prior versions, and prunes any version older than the 3 latest snapshots to maintain a lightweight, efficient MongoDB footprint.
+              </p>
+              <p className="text-slate-400 text-[11px]">
+                Cron job schedule: <code className="bg-slate-200 px-1 rounded">*/15 * * * *</code> (every 15 mins).
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                Retained Snapshots in Database ({portalData?.versions?.length || 0}/3):
+              </span>
+              {portalData?.versions && portalData.versions.length > 0 ? (
+                portalData.versions.map((ver) => (
+                  <div
+                    key={ver.versionNumber}
+                    className="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-white shadow-sm"
+                  >
+                    <div>
+                      <div className="flex items-center space-x-2">
+                        <span className="font-extrabold text-sm text-slate-900">
+                          v{ver.versionNumber}
+                        </span>
+                        <span
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                            ver.status === "published"
+                              ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                              : "bg-slate-100 text-slate-600"
+                          }`}
+                        >
+                          {ver.status}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        {new Date(ver.fetchedAt).toLocaleString("en-IN")}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xs font-bold text-slate-700">
+                        {ver.itemCount} items
+                      </span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-xs text-slate-400 text-center py-2">No version history available.</div>
+              )}
+            </div>
+
+            <button
+              onClick={() => {
+                setShowVersionModal(false);
+                handleManualSync();
+              }}
+              disabled={isSyncing}
+              className="w-full py-2.5 rounded-xl bg-blue-900 hover:bg-blue-800 text-white font-bold text-xs shadow transition flex items-center justify-center space-x-2 disabled:opacity-50"
+            >
+              <i className={`fa-solid fa-rotate ${isSyncing ? "animate-spin" : ""}`}></i>
+              <span>{isSyncing ? "Crawling & Publishing..." : "Trigger Manual Sync & Auto-Publish"}</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* MAIN CONTENT CONTAINER */}
       <main className="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* ============================================================== */}
-        {/* TAB 1: HOME VIEW (EXACT MATCH TO THE UPLOADED SCREENSHOT) */}
+        {/* TAB 1: HOME VIEW (EXACT MATCH TO SCREENSHOT) */}
         {/* ============================================================== */}
         {activeTab === "home" && (
           <section className="space-y-12">
@@ -1509,7 +1694,7 @@ export default function RootTypingPortalPage() {
         )}
 
         {/* ============================================================== */}
-        {/* TAB 3: EXAM MODE VIEW */}
+        {/* TAB 3: EXAM MODE VIEW (LIVE SYNCED WITH ALL 30+ EXAM PATTERNS) */}
         {/* ============================================================== */}
         {activeTab === "exam" && (
           <section className="space-y-3">
@@ -1520,8 +1705,7 @@ export default function RootTypingPortalPage() {
                     Government Exam Typing Test Mode — Select Examination Pattern
                   </h2>
                   <p className="text-xs text-slate-500 mt-0.5 truncate">
-                    Select from official competitive exam boards mirroring government recruitment rules (exact rules
-                    may vary by post and notification).
+                    All 30+ official Indian government typing examination patterns loaded. Cards badged with LIVE 2026 reflect real-time active recruitment notices.
                   </p>
                 </div>
                 <input
@@ -1568,41 +1752,70 @@ export default function RootTypingPortalPage() {
                     </button>
                   </div>
 
+                  {/* 30+ Exam Pattern Cards Grid */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 max-h-[620px] overflow-y-auto custom-scrollbar pr-1">
-                    {filteredExams.map((e) => (
-                      <label
-                        key={e.id}
-                        onClick={() => setSelectedExamId(e.id)}
-                        className={`border p-3.5 rounded-xl cursor-pointer hover:border-amber-500 hover:shadow-sm bg-slate-50 flex items-start gap-3 transition ${
-                          selectedExamId === e.id ? "ring-2 ring-amber-500 border-amber-500" : "border-slate-200"
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          name="examBoardRadio"
-                          checked={selectedExamId === e.id}
-                          onChange={() => setSelectedExamId(e.id)}
-                          className="mt-1 accent-amber-500"
-                        />
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="font-bold text-slate-900 text-sm leading-snug">{e.name}</div>
-                            <i className={`fa-solid ${e.icon} text-amber-600 mt-0.5`}></i>
+                    {filteredExams.map((e) => {
+                      const liveMatch = liveMatchedMap.get(e.id);
+                      const targetOfficialUrl = liveMatch?.officialUrl || e.defaultOfficialUrl;
+
+                      return (
+                        <label
+                          key={e.id}
+                          onClick={() => setSelectedExamId(e.id)}
+                          className={`border p-3.5 rounded-xl cursor-pointer hover:border-amber-500 hover:shadow-sm bg-slate-50 flex items-start gap-3 transition relative ${
+                            selectedExamId === e.id ? "ring-2 ring-amber-500 border-amber-500" : "border-slate-200"
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="examBoardRadio"
+                            checked={selectedExamId === e.id}
+                            onChange={() => setSelectedExamId(e.id)}
+                            className="mt-1 accent-amber-500"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="font-bold text-slate-900 text-sm leading-snug">{e.name}</div>
+                              <i className={`fa-solid ${e.icon} text-amber-600 mt-0.5`}></i>
+                            </div>
+
+                            <p className="text-[11px] text-slate-500 mt-1">
+                              {e.duration} min • {e.speed}
+                            </p>
+
+                            <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
+                                {e.note}
+                              </span>
+                              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-200 text-slate-600">
+                                {e.language}
+                              </span>
+
+                              {/* LIVE 2026 Badge for Active Recruitments */}
+                              {liveMatch && (
+                                <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-red-100 text-red-700 border border-red-300 flex items-center gap-1">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse"></span>
+                                  LIVE 2026
+                                </span>
+                              )}
+
+                              {/* Direct Official Govt Portal Redirection Link */}
+                              <a
+                                href={targetOfficialUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(ev) => ev.stopPropagation()}
+                                className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-2 py-0.5 rounded border border-blue-200 ml-auto transition"
+                                title={`Open official portal: ${targetOfficialUrl}`}
+                              >
+                                <span>Official Portal</span>
+                                <i className="fa-solid fa-arrow-up-right-from-square text-[8px]"></i>
+                              </a>
+                            </div>
                           </div>
-                          <p className="text-[11px] text-slate-500 mt-1">
-                            {e.duration} min • {e.speed}
-                          </p>
-                          <div className="flex flex-wrap gap-1.5 mt-1.5">
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
-                              {e.note}
-                            </span>
-                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-200 text-slate-600">
-                              {e.language}
-                            </span>
-                          </div>
-                        </div>
-                      </label>
-                    ))}
+                        </label>
+                      );
+                    })}
                   </div>
 
                   {filteredExams.length === 0 && (
@@ -1707,16 +1920,13 @@ export default function RootTypingPortalPage() {
                     </h3>
                     <ul className="list-disc list-inside text-xs text-amber-800 space-y-1">
                       <li>
-                        <strong>Practice simulation:</strong> This tool is for preparation and does not reproduce an
-                        official recruitment test centre.
+                        <strong>Practice simulation:</strong> This tool is for preparation and mirrors official test formats.
                       </li>
                       <li>
-                        <strong>Pattern:</strong> Duration, language, speed, font, error calculation and qualifying
-                        rules are loaded for the selected exam pattern.
+                        <strong>Pattern:</strong> Duration, language, speed, font, error calculation and qualifying rules are loaded for the selected exam pattern.
                       </li>
                       <li>
-                        Exact eligibility and test rules can change by recruitment year, post and official notification.
-                        Always verify the latest notice.
+                        <strong>Direct Official Portal Redirection:</strong> Click &quot;Official Portal ↗&quot; on any card to visit the authentic recruitment authority website (ssc.gov.in, rrbcdg.gov.in, etc.).
                       </li>
                       <li>Once started, the timer cannot be paused. Ensure your keyboard is functioning properly.</li>
                     </ul>
@@ -2031,7 +2241,7 @@ export default function RootTypingPortalPage() {
         )}
 
         {/* ============================================================== */}
-        {/* TAB 7: BLOG & FAQ VIEW */}
+        {/* TAB 7: BLOG & FAQ VIEW (WITH LIVE RECRUITMENT FEEDS & REDIRECTION) */}
         {/* ============================================================== */}
         {activeTab === "blog" && (
           <section className="space-y-6">
@@ -2044,6 +2254,37 @@ export default function RootTypingPortalPage() {
                   Typing Guides, Tips &amp; Frequently Asked Questions
                 </h2>
               </div>
+
+              {/* Live Official Government Recruitment Feeds */}
+              {portalData?.current?.items && portalData.current.items.length > 0 && (
+                <div className="p-5 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-extrabold text-slate-900 text-base flex items-center gap-2">
+                      <i className="fa-solid fa-satellite-dish text-blue-600 animate-pulse"></i>
+                      <span>Live Active Government Portals (Direct Official Redirection)</span>
+                    </h3>
+                    <span className="text-[11px] font-bold text-blue-800 bg-blue-100 px-2 py-0.5 rounded-full">
+                      Auto-Crawled
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                    {portalData.current.items.slice(0, 8).map((it, idx) => (
+                      <a
+                        key={idx}
+                        href={it.officialUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2.5 rounded-xl bg-white border border-slate-200 hover:border-blue-500 text-slate-800 hover:text-blue-700 flex items-center justify-between transition shadow-sm"
+                      >
+                        <span className="truncate pr-2 font-semibold">{it.title}</span>
+                        <span className="text-[10px] font-bold text-blue-600 whitespace-nowrap flex items-center gap-1">
+                          Official <i className="fa-solid fa-arrow-up-right-from-square text-[8px]"></i>
+                        </span>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-4">
                 <h3 className="text-xl font-bold text-slate-900 border-b pb-2">Frequently Asked Questions</h3>
@@ -2059,6 +2300,12 @@ export default function RootTypingPortalPage() {
                   <p className="text-sm text-slate-600">
                     A: Speed is calculated based on standard industry formulas where 5 characters/keystrokes equal 1
                     word. Net WPM subtracts error penalties from Gross WPM.
+                  </p>
+                </div>
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
+                  <h4 className="font-bold text-slate-900 text-base">Q: Does this platform redirect to official government portals?</h4>
+                  <p className="text-sm text-slate-600">
+                    A: Yes! Every active recruitment badge and link connects directly to official government recruitment authorities like ssc.gov.in, rrbcdg.gov.in, uppbpb.gov.in, and official High Court portals.
                   </p>
                 </div>
               </div>
@@ -2162,7 +2409,7 @@ export default function RootTypingPortalPage() {
           </div>
           <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500">
             <p>&copy; {new Date().getFullYear()} RV TypingMaster / Sarkari Selection. All rights reserved.</p>
-            <p className="mt-2 sm:mt-0">Designed for Speed, Accuracy &amp; Excellence.</p>
+            <p className="mt-2 sm:mt-0">Official Government Examination Typing Practice Platform.</p>
           </div>
         </div>
       </footer>

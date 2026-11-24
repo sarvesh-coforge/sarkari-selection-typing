@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "RV TypingMaster - Sarkari Selection • India's Leading Typing & Exam Practice Platform",
+  title: "Sarkari Selection • India's Leading Govt Jobs, Results & Typing Exam Platform",
   description: "Comprehensive typing tests, government exam simulations (SSC, RRB, High Court, DSSSB), multilingual tutors, font tools, and word arcade games.",
 };
 

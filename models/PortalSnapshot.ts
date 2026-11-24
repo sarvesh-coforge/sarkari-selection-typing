@@ -2,10 +2,13 @@ import mongoose, { Schema, Document, Model } from "mongoose";
 
 export interface IPortalItem {
   title: string;
+  slug: string;
   officialUrl: string;
   url?: string;
   category: "result" | "admit_card" | "latest_job" | "answer_key" | "syllabus" | "admission" | "hot_update" | string;
   badge?: string;
+  colorClass?: string;
+  postDate?: string;
   matchedExamIds?: string[];
 }
 
@@ -22,10 +25,13 @@ export interface IPortalSnapshot extends Document {
 const PortalItemSchema = new Schema<IPortalItem>(
   {
     title: { type: String, required: true },
+    slug: { type: String, required: true },
     officialUrl: { type: String, required: true },
     url: { type: String, default: "" },
     category: { type: String, required: true, index: true },
     badge: { type: String, default: "" },
+    colorClass: { type: String, default: "" },
+    postDate: { type: String, default: "" },
     matchedExamIds: { type: [String], default: [] },
   },
   { _id: false }

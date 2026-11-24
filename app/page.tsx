@@ -52,10 +52,13 @@ interface TestStats {
 
 interface IPortalItem {
   title: string;
+  slug?: string;
   officialUrl: string;
   url?: string;
   category: string;
   badge?: string;
+  colorClass?: string;
+  postDate?: string;
   matchedExamIds?: string[];
 }
 
@@ -150,7 +153,7 @@ const tutorLessons: Record<"english" | "krutidev" | "mangal", string[]> = {
   ],
 };
 
-const EXAM_HISTORY_KEY = "rvTypingMasterExamHistoryV2";
+const EXAM_HISTORY_KEY = "sarkariSelectionExamHistoryV2";
 
 export default function RootTypingPortalPage() {
   const [activeTab, setActiveTab] = useState<TabId>("home");
@@ -201,6 +204,8 @@ export default function RootTypingPortalPage() {
   const [examCategory, setExamCategory] = useState<ExamCategory>("all");
   const [examSearch, setExamSearch] = useState<string>("");
   const [examHistory, setExamHistory] = useState<ExamHistoryItem[]>([]);
+  const [liveBoardSearch, setLiveBoardSearch] = useState<string>("");
+  const [liveBoardTab, setLiveBoardTab] = useState<"all" | "result" | "admit_card" | "latest_job">("all");
 
   // Typing Tutor States
   const [tutorType, setTutorType] = useState<"english" | "krutidev" | "mangal">("english");
@@ -271,6 +276,13 @@ export default function RootTypingPortalPage() {
   // Hydrate exam history from localStorage and load portal data on mount
   useEffect(() => {
     fetchPortalData();
+    if (typeof window !== "undefined") {
+      const searchParams = new URLSearchParams(window.location.search);
+      const tabParam = searchParams.get("tab") as TabId;
+      if (tabParam && ["home", "test", "test-result", "exam", "tutor", "tools", "game", "blog"].includes(tabParam)) {
+        setActiveTab(tabParam);
+      }
+    }
     try {
       const saved = localStorage.getItem(EXAM_HISTORY_KEY);
       if (saved) {
@@ -349,6 +361,50 @@ export default function RootTypingPortalPage() {
     }
     return map;
   }, [portalData]);
+
+  // Helper to resolve clean slug for linking to /post/[slug]
+  const getItemSlug = (it: IPortalItem) => {
+    if (it.slug) return it.slug;
+    return it.title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)+/g, "")
+      .slice(0, 100);
+  };
+
+  const quickAccessHotUpdates = useMemo(() => {
+    if (!portalData?.current?.items) return [];
+    const h = portalData.current.items.filter((x) => x.category === "hot_update");
+    const base = h.length > 0 ? h : portalData.current.items;
+    const q = liveBoardSearch.toLowerCase().trim();
+    if (!q) return base.slice(0, 8);
+    const filtered = base.filter((x) => x.title.toLowerCase().includes(q));
+    return filtered.length > 0 ? filtered.slice(0, 8) : base.slice(0, 8);
+  }, [portalData, liveBoardSearch]);
+
+  const resultBoardItems = useMemo(() => {
+    if (!portalData?.current?.items) return [];
+    const q = liveBoardSearch.toLowerCase().trim();
+    return portalData.current.items
+      .filter((x) => x.category === "result")
+      .filter((x) => !q || x.title.toLowerCase().includes(q));
+  }, [portalData, liveBoardSearch]);
+
+  const admitCardBoardItems = useMemo(() => {
+    if (!portalData?.current?.items) return [];
+    const q = liveBoardSearch.toLowerCase().trim();
+    return portalData.current.items
+      .filter((x) => x.category === "admit_card")
+      .filter((x) => !q || x.title.toLowerCase().includes(q));
+  }, [portalData, liveBoardSearch]);
+
+  const latestJobBoardItems = useMemo(() => {
+    if (!portalData?.current?.items) return [];
+    const q = liveBoardSearch.toLowerCase().trim();
+    return portalData.current.items
+      .filter((x) => x.category === "latest_job")
+      .filter((x) => !q || x.title.toLowerCase().includes(q));
+  }, [portalData, liveBoardSearch]);
 
   // Typing Test Stats Calculation
   const calculateTestStats = (): TestStats => {
@@ -597,7 +653,7 @@ export default function RootTypingPortalPage() {
         </div>
       )}
 
-      {/* TOP HEADER (RV TypingMaster / Sarkari Selection Navigation Bar) */}
+      {/* TOP HEADER (Sarkari Selection Navigation Bar) */}
       <header className="bg-gradient-to-r from-[#1e3a8a] to-[#1e40af] text-white shadow-md sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
@@ -607,6 +663,9 @@ export default function RootTypingPortalPage() {
               onClick={() => switchTab("home")}
             >
               <svg
+                width="40"
+                height="40"
+                style={{ width: "40px", height: "40px", minWidth: "40px", maxWidth: "40px", flexShrink: 0 }}
                 className="w-10 h-10 shrink-0 drop-shadow"
                 viewBox="0 0 100 100"
                 fill="none"
@@ -622,26 +681,31 @@ export default function RootTypingPortalPage() {
                 />
                 <rect x="35" y="62" width="30" height="8" rx="4" fill="#f59e0b" />
                 <circle cx="82" cy="20" r="12" fill="#f59e0b" />
-                <text x="82" y="24" fontSize="14" fontWeight="900" fill="#1e3a8a" textAnchor="middle">
-                  RV
+                <text x="82" y="24" fontSize="11" fontWeight="900" fill="#1e3a8a" textAnchor="middle">
+                  SS
                 </text>
               </svg>
               <div className="flex flex-col">
-                <span className="text-xl sm:text-2xl font-black tracking-wider text-white whitespace-nowrap">
-                  RV <span className="text-amber-400">TypingMaster</span>
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xl sm:text-2xl font-black tracking-tight text-white whitespace-nowrap uppercase">
+                    Sarkari <span className="text-amber-400">Selection</span>
+                  </span>
+                  <span className="bg-amber-400 text-blue-950 text-[9px] font-black px-1.5 py-0.2 rounded uppercase tracking-wider hidden sm:inline-block">
+                    Official
+                  </span>
+                </div>
                 <span className="text-[11px] text-blue-200 tracking-wide font-medium whitespace-nowrap">
-                  Sarkari Selection • India&apos;s Leading Typing &amp; Exam Portal
+                  India&apos;s Leading Govt Jobs, Results &amp; Typing Examination Portal
                 </span>
               </div>
             </div>
 
             {/* Desktop Navigation Menu */}
-            <nav className="hidden xl:flex items-center space-x-1 shrink-0">
+            <nav className="hidden xl:flex items-center space-x-1.5 shrink-0">
               <button
                 onClick={() => switchTab("home")}
-                className={`px-3 py-2 rounded-md text-sm font-semibold hover:bg-blue-800 transition flex items-center gap-1.5 whitespace-nowrap ${
-                  activeTab === "home" ? "text-amber-300 font-bold" : "text-white"
+                className={`px-3 py-2 rounded-lg text-sm font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
+                  activeTab === "home" ? "bg-white/15 text-amber-300 shadow-inner" : "text-white hover:bg-white/10"
                 }`}
               >
                 <i className="fa-solid fa-house"></i> Home
@@ -651,8 +715,8 @@ export default function RootTypingPortalPage() {
               <div className="relative group">
                 <button
                   onClick={() => switchTab("test")}
-                  className={`px-3 py-2 rounded-md text-sm font-semibold hover:bg-blue-800 transition flex items-center gap-1.5 whitespace-nowrap ${
-                    activeTab === "test" || activeTab === "test-result" ? "text-amber-300 font-bold" : "text-white"
+                  className={`px-3 py-2 rounded-lg text-sm font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
+                    activeTab === "test" || activeTab === "test-result" ? "bg-white/15 text-amber-300 shadow-inner" : "text-white hover:bg-white/10"
                   }`}
                 >
                   <i className="fa-solid fa-stopwatch"></i> Typing Test{" "}
@@ -689,11 +753,11 @@ export default function RootTypingPortalPage() {
               {/* Exam Menu */}
               <button
                 onClick={() => switchTab("exam")}
-                className={`px-3 py-2 rounded-md text-sm font-semibold hover:bg-blue-800 transition flex items-center gap-1.5 whitespace-nowrap ${
-                  activeTab === "exam" ? "text-amber-300 font-bold" : "text-amber-300"
+                className={`px-3 py-2 rounded-lg text-sm font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
+                  activeTab === "exam" ? "bg-white/15 text-amber-300 shadow-inner" : "text-white hover:bg-white/10"
                 }`}
               >
-                <i className="fa-solid fa-graduation-cap"></i> Exam Mode
+                <i className="fa-solid fa-bullhorn text-amber-300"></i> Exam Mode
               </button>
 
               {/* Typing Tutor Dropdown */}
@@ -801,18 +865,8 @@ export default function RootTypingPortalPage() {
               </button>
             </nav>
 
-            {/* Live DB Status Pill & Auth Actions */}
+            {/* Auth Actions */}
             <div className="flex items-center space-x-2.5 shrink-0">
-              {/* Live DB Pill */}
-              <button
-                onClick={() => setShowVersionModal(true)}
-                className="hidden lg:flex items-center space-x-1.5 bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-400/50 text-emerald-300 px-3 py-1.5 rounded-full text-[11px] font-bold cursor-pointer transition shadow-sm"
-                title="Click to view strictly 3 versions retention in MongoDB"
-              >
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-                <span>Live DB: v{currentVersion} • 3 Versions Max • Auto-Published</span>
-                <i className="fa-solid fa-database text-[10px] ml-1 text-emerald-400"></i>
-              </button>
 
               <button
                 onClick={() => {
@@ -993,7 +1047,7 @@ export default function RootTypingPortalPage() {
                   <span className="absolute -top-3 right-4 bg-amber-500 text-slate-900 text-[10px] font-black px-3 py-1 rounded-full uppercase shadow">
                     1 Week Free Trial
                   </span>
-                  <div className="font-black text-slate-900 text-lg">RV TypingMaster Pro Pass</div>
+                  <div className="font-black text-slate-900 text-lg">Sarkari Selection Pro Pass</div>
                   <div className="text-3xl font-black text-blue-600">
                     ₹100 <span className="text-xs text-slate-500 font-normal">/ month</span>
                   </div>
@@ -1051,7 +1105,7 @@ export default function RootTypingPortalPage() {
                 <textarea
                   value={feedbackText}
                   onChange={(e) => setFeedbackText(e.target.value)}
-                  placeholder="Write your experience with RV TypingMaster..."
+                  placeholder="Write your experience with Sarkari Selection..."
                   className="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-sm h-28 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 ></textarea>
               </div>
@@ -1178,7 +1232,7 @@ export default function RootTypingPortalPage() {
                   India&apos;s #1 Typing Suite
                 </span>
                 <h1 className="text-3xl sm:text-5xl font-black tracking-tight leading-tight">
-                  Master Your Speed with <span className="text-amber-400">RV TypingMaster</span>
+                  Master Your Speed with <span className="text-amber-400">Sarkari Selection</span>
                 </h1>
                 <p className="text-slate-300 text-base sm:text-lg">
                   Comprehensive typing tests, government exam simulations, multilingual tutors, and typing arcade
@@ -1268,7 +1322,7 @@ export default function RootTypingPortalPage() {
             <div className="bg-white rounded-2xl p-8 sm:p-10 border border-slate-200 shadow-sm space-y-6">
               <div className="border-b border-slate-200 pb-4">
                 <span className="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                  About RV TypingMaster
+                  About Sarkari Selection
                 </span>
                 <h2 className="text-2xl sm:text-3xl font-black text-slate-900 mt-2">
                   Empowering Aspirants Across India with Precision Typing
@@ -1276,7 +1330,7 @@ export default function RootTypingPortalPage() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-slate-600 text-sm leading-relaxed">
                 <p>
-                  <strong>RV TypingMaster</strong> was engineered with a singular mission: to provide candidates
+                  <strong>Sarkari Selection</strong> was engineered with a singular mission: to provide candidates
                   preparing for competitive government examinations and corporate careers with the most accurate,
                   reliable, and user-friendly typing practice environment. Whether you are aiming for SSC CHSL,
                   Allahabad High Court RO/ARO, or banking positions, our platform matches exact government examination
@@ -1297,7 +1351,7 @@ export default function RootTypingPortalPage() {
                 <span className="bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
                   Our Core Strengths
                 </span>
-                <h2 className="text-2xl sm:text-3xl font-black text-slate-900">Why Choose RV TypingMaster?</h2>
+                <h2 className="text-2xl sm:text-3xl font-black text-slate-900">Why Choose Sarkari Selection?</h2>
                 <p className="text-sm text-slate-600">
                   Discover what makes our platform the preferred choice for over 50,000 aspirants.
                 </p>
@@ -1694,244 +1748,502 @@ export default function RootTypingPortalPage() {
         )}
 
         {/* ============================================================== */}
-        {/* TAB 3: EXAM MODE VIEW (LIVE SYNCED WITH ALL 30+ EXAM PATTERNS) */}
+        {/* TAB 3: EXAM MODE VIEW (LIVE SARKARI RESULT RECRUITMENT BOARDS) */}
         {/* ============================================================== */}
         {activeTab === "exam" && (
-          <section className="space-y-3">
-            <div className="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200">
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2 border-b border-slate-200 pb-3 mb-3">
-                <div className="min-w-0">
-                  <h2 className="text-xl sm:text-2xl font-black text-slate-900 leading-tight truncate">
-                    Government Exam Typing Test Mode — Select Examination Pattern
+          <section className="space-y-6">
+            <div className="bg-white p-5 sm:p-7 rounded-2xl shadow-sm border border-slate-200 space-y-6">
+              {/* Header with Live Status & Sync Action */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+                <div>
+                  <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-red-100 text-red-700 border border-red-200">
+                      <span className="w-2 h-2 rounded-full bg-red-600 animate-ping"></span>
+                      <span>LIVE 2026</span>
+                    </span>
+                    <span className="text-xs font-semibold text-slate-500">
+                      Real-time synced with sarkariresult.com
+                    </span>
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                    Live Sarkari Result Recruitment &amp; Exam Updates
                   </h2>
-                  <p className="text-xs text-slate-500 mt-0.5 truncate">
-                    All 30+ official Indian government typing examination patterns loaded. Cards badged with LIVE 2026 reflect real-time active recruitment notices.
+                  <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-3xl leading-relaxed">
+                    Click any post to view its authentic SarkariResult notification table or redirect directly to verified official government recruitment portals (UPPSC, SSC, RRB, UPSC, High Courts, etc.).
                   </p>
                 </div>
-                <input
-                  type="search"
-                  value={examSearch}
-                  onChange={(e) => setExamSearch(e.target.value)}
-                  placeholder="Search exam / board..."
-                  className="w-full lg:w-64 shrink-0 bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none"
-                />
+
+                <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
+                  <button
+                    type="button"
+                    onClick={handleManualSync}
+                    disabled={isSyncing}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs shadow transition flex items-center gap-2 disabled:opacity-50"
+                    title="Crawl https://www.sarkariresult.com/ in real time"
+                  >
+                    <i className={`fa-solid fa-arrows-rotate text-xs ${isSyncing ? "animate-spin" : ""}`}></i>
+                    <span>{isSyncing ? "Syncing..." : "Sync Live Updates"}</span>
+                  </button>
+                </div>
               </div>
 
-              <div className="space-y-3">
-                <div className="space-y-2.5">
-                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-2">
-                    <div className="flex flex-wrap gap-1.5">
-                      {[
-                        { id: "all", label: "All Exams" },
-                        { id: "central", label: "Central Govt." },
-                        { id: "railway", label: "Railways" },
-                        { id: "court", label: "Courts" },
-                        { id: "state", label: "State Govt." },
-                        { id: "institute", label: "Institutes / Depts" },
-                        { id: "police", label: "Police / Security" },
-                      ].map((cat) => (
-                        <button
-                          key={cat.id}
-                          type="button"
-                          onClick={() => setExamCategory(cat.id as ExamCategory)}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-                            examCategory === cat.id
-                              ? "bg-amber-500 text-slate-900 shadow-sm"
-                              : "bg-slate-100 text-slate-700 hover:bg-amber-50"
-                          }`}
-                        >
-                          {cat.label}
-                        </button>
-                      ))}
-                    </div>
+              {/* Interactive Search & Board Filter Bar */}
+              <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                {/* Search Input */}
+                <div className="relative flex-1">
+                  <i className="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                  <input
+                    type="text"
+                    value={liveBoardSearch}
+                    onChange={(e) => setLiveBoardSearch(e.target.value)}
+                    placeholder="Search recruitment, board (UPPSC, SSC, RRB, UPSC, DSSSB), admit card, result..."
+                    className="w-full pl-10 pr-9 py-2 rounded-lg border border-slate-300 bg-white text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition shadow-inner"
+                  />
+                  {liveBoardSearch && (
                     <button
-                      onClick={startOfficialExam}
-                      className="bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold px-4 py-1.5 rounded-lg shadow transition flex items-center gap-1.5 text-xs shrink-0"
+                      type="button"
+                      onClick={() => setLiveBoardSearch("")}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-sm"
+                      title="Clear search"
                     >
-                      <i className="fa-solid fa-play"></i> Proceed to Exam Test
+                      <i className="fa-solid fa-xmark"></i>
                     </button>
+                  )}
+                </div>
+
+                {/* Filter Pills */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setLiveBoardTab("all")}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
+                      liveBoardTab === "all"
+                        ? "bg-slate-900 text-white shadow-sm"
+                        : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-300"
+                    }`}
+                  >
+                    <span>All Boards</span>
+                    <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-700 text-white">
+                      {resultBoardItems.length + admitCardBoardItems.length + latestJobBoardItems.length}
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setLiveBoardTab("latest_job")}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
+                      liveBoardTab === "latest_job"
+                        ? "bg-[#065f46] text-white shadow-sm"
+                        : "bg-white text-emerald-900 hover:bg-emerald-50 border border-emerald-300"
+                    }`}
+                  >
+                    <i className="fa-solid fa-briefcase text-[10px]"></i>
+                    <span>Latest Jobs</span>
+                    <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-800 text-white">
+                      {latestJobBoardItems.length}
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setLiveBoardTab("admit_card")}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
+                      liveBoardTab === "admit_card"
+                        ? "bg-[#1e3a8a] text-white shadow-sm"
+                        : "bg-white text-blue-900 hover:bg-blue-50 border border-blue-300"
+                    }`}
+                  >
+                    <i className="fa-solid fa-id-card text-[10px]"></i>
+                    <span>Admit Cards</span>
+                    <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-blue-800 text-white">
+                      {admitCardBoardItems.length}
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setLiveBoardTab("result")}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
+                      liveBoardTab === "result"
+                        ? "bg-[#800000] text-white shadow-sm"
+                        : "bg-white text-red-900 hover:bg-red-50 border border-red-300"
+                    }`}
+                  >
+                    <i className="fa-solid fa-square-poll-vertical text-[10px]"></i>
+                    <span>Results</span>
+                    <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-red-900 text-white">
+                      {resultBoardItems.length}
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              {/* 8 Colored Quick Access Hot Updates Tiles */}
+              <div>
+                <div className="text-xs font-black text-slate-700 uppercase tracking-wider mb-3 flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <i className="fa-solid fa-fire text-amber-500"></i>
+                    <span>Quick Access Hot Updates (Top 8 Colored Boards)</span>
+                  </span>
+                  <span className="text-[11px] text-slate-400 font-normal">Click tile to view notification details</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  {quickAccessHotUpdates.map((item, idx) => {
+                    const slug = getItemSlug(item);
+                    return (
+                      <div
+                        key={idx}
+                        className={`rounded-xl p-3.5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between min-h-[110px] border border-black/10 hover-lift ${
+                          item.colorClass || "bg-red-700 text-white"
+                        }`}
+                      >
+                        <div className="space-y-1.5">
+                          {item.badge && (
+                            <span className="inline-block text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-black/30 text-white">
+                              {item.badge}
+                            </span>
+                          )}
+                          <Link
+                            href={`/post/${slug}`}
+                            className="font-black text-xs sm:text-[13px] leading-snug line-clamp-2 hover:underline block text-white"
+                            title={item.title}
+                          >
+                            {item.title}
+                          </Link>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-1.5 mt-3 pt-2 border-t border-white/20 text-[11px]">
+                          <Link
+                            href={`/post/${slug}`}
+                            className="font-black hover:underline inline-flex items-center gap-1 text-white opacity-95 hover:opacity-100"
+                          >
+                            <span>View Details</span>
+                            <span>&rarr;</span>
+                          </Link>
+                          <a
+                            href={item.officialUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-bold underline text-white/90 hover:text-white inline-flex items-center gap-1"
+                            title={`Direct official government link: ${item.officialUrl}`}
+                          >
+                            <span>Govt Portal</span>
+                            <i className="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                          </a>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Classic Sarkari Result Recruitment Boards */}
+              <div>
+                <div className="text-xs font-black text-slate-700 uppercase tracking-wider mb-3 flex items-center justify-between">
+                  <span>
+                    {liveBoardTab === "all"
+                      ? "Classic 3-Column Sarkari Recruitment Boards"
+                      : liveBoardTab === "result"
+                      ? "Official Results Board"
+                      : liveBoardTab === "admit_card"
+                      ? "Official Admit Cards Board"
+                      : "Official Latest Recruitment Jobs Board"}
+                  </span>
+                  {liveBoardSearch && (
+                    <span className="text-[11px] text-blue-600 font-bold">
+                      Filtered by: &ldquo;{liveBoardSearch}&rdquo;
+                    </span>
+                  )}
+                </div>
+
+                {/* 3-Column Layout when "all" is active */}
+                {liveBoardTab === "all" && (
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                    {/* Column 1: Result (Maroon Header) */}
+                    <div className="flex flex-col border-2 border-red-900 rounded-xl overflow-hidden shadow-sm bg-white">
+                      <div className="bg-[#800000] text-white py-3 px-4 font-black text-sm uppercase tracking-wide flex items-center justify-between">
+                        <span className="flex items-center gap-2">
+                          <i className="fa-solid fa-square-poll-vertical"></i>
+                          <span>Result</span>
+                        </span>
+                        <span className="text-[10px] bg-red-950/70 px-2.5 py-0.5 rounded font-bold">
+                          {resultBoardItems.length} Available
+                        </span>
+                      </div>
+                      <div className="divide-y divide-slate-100 max-h-[540px] overflow-y-auto custom-scrollbar flex-1">
+                        {resultBoardItems.length > 0 ? (
+                          resultBoardItems.map((it, idx) => {
+                            const slug = getItemSlug(it);
+                            return (
+                              <div key={idx} className="p-3.5 hover:bg-amber-50/70 transition flex items-start gap-2.5 text-xs">
+                                <span className="text-red-700 font-black mt-0.5">&bull;</span>
+                                <div className="flex-1 min-w-0">
+                                  <Link
+                                    href={`/post/${slug}`}
+                                    className="font-bold text-blue-900 hover:text-blue-700 hover:underline leading-snug block line-clamp-2"
+                                    title="View authentic SarkariResult notification table"
+                                  >
+                                    {it.title}
+                                  </Link>
+                                  <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                                    {it.badge && (
+                                      <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-red-100 text-red-800 border border-red-200">
+                                        {it.badge}
+                                      </span>
+                                    )}
+                                    <Link
+                                      href={`/post/${slug}`}
+                                      className="text-[10px] font-bold text-blue-700 hover:underline inline-flex items-center gap-0.5"
+                                    >
+                                      <span>Details</span> &rarr;
+                                    </Link>
+                                    <a
+                                      href={it.officialUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-[10px] font-bold text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded border border-emerald-200 ml-auto inline-flex items-center gap-1"
+                                      title={`Official government portal: ${it.officialUrl}`}
+                                    >
+                                      <span>Govt Portal</span>
+                                      <i className="fa-solid fa-arrow-up-right-from-square text-[8px]"></i>
+                                    </a>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })
+                        ) : (
+                          <div className="p-8 text-center text-xs text-slate-400">
+                            {liveBoardSearch ? "No results match your search." : "Loading latest results..."}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Column 2: Admit Card (Blue Header) */}
+                    <div className="flex flex-col border-2 border-blue-900 rounded-xl overflow-hidden shadow-sm bg-white">
+                      <div className="bg-[#1e3a8a] text-white py-3 px-4 font-black text-sm uppercase tracking-wide flex items-center justify-between">
+                        <span className="flex items-center gap-2">
+                          <i className="fa-solid fa-id-card"></i>
+                          <span>Admit Card</span>
+                        </span>
+                        <span className="text-[10px] bg-blue-950/70 px-2.5 py-0.5 rounded font-bold">
+                          {admitCardBoardItems.length} Available
+                        </span>
+                      </div>
+                      <div className="divide-y divide-slate-100 max-h-[540px] overflow-y-auto custom-scrollbar flex-1">
+                        {admitCardBoardItems.length > 0 ? (
+                          admitCardBoardItems.map((it, idx) => {
+                            const slug = getItemSlug(it);
+                            return (
+                              <div key={idx} className="p-3.5 hover:bg-blue-50/50 transition flex items-start gap-2.5 text-xs">
+                                <span className="text-blue-700 font-black mt-0.5">&bull;</span>
+                                <div className="flex-1 min-w-0">
+                                  <Link
+                                    href={`/post/${slug}`}
+                                    className="font-bold text-blue-900 hover:text-blue-700 hover:underline leading-snug block line-clamp-2"
+                                    title="View authentic SarkariResult notification table"
+                                  >
+                                    {it.title}
+                                  </Link>
+                                  <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                                    {it.badge && (
+                                      <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 border border-blue-200">
+                                        {it.badge}
+                                      </span>
+                                    )}
+                                    <Link
+                                      href={`/post/${slug}`}
+                                      className="text-[10px] font-bold text-blue-700 hover:underline inline-flex items-center gap-0.5"
+                                    >
+                                      <span>Details</span> &rarr;
+                                    </Link>
+                                    <a
+                                      href={it.officialUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-[10px] font-bold text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded border border-emerald-200 ml-auto inline-flex items-center gap-1"
+                                      title={`Official government portal: ${it.officialUrl}`}
+                                    >
+                                      <span>Govt Portal</span>
+                                      <i className="fa-solid fa-arrow-up-right-from-square text-[8px]"></i>
+                                    </a>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })
+                        ) : (
+                          <div className="p-8 text-center text-xs text-slate-400">
+                            {liveBoardSearch ? "No admit cards match your search." : "Loading admit cards..."}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Column 3: Latest Job (Emerald Header) */}
+                    <div className="flex flex-col border-2 border-emerald-900 rounded-xl overflow-hidden shadow-sm bg-white">
+                      <div className="bg-[#065f46] text-white py-3 px-4 font-black text-sm uppercase tracking-wide flex items-center justify-between">
+                        <span className="flex items-center gap-2">
+                          <i className="fa-solid fa-briefcase"></i>
+                          <span>Latest Job</span>
+                        </span>
+                        <span className="text-[10px] bg-emerald-950/70 px-2.5 py-0.5 rounded font-bold">
+                          {latestJobBoardItems.length} Available
+                        </span>
+                      </div>
+                      <div className="divide-y divide-slate-100 max-h-[540px] overflow-y-auto custom-scrollbar flex-1">
+                        {latestJobBoardItems.length > 0 ? (
+                          latestJobBoardItems.map((it, idx) => {
+                            const slug = getItemSlug(it);
+                            return (
+                              <div key={idx} className="p-3.5 hover:bg-emerald-50/50 transition flex items-start gap-2.5 text-xs">
+                                <span className="text-emerald-700 font-black mt-0.5">&bull;</span>
+                                <div className="flex-1 min-w-0">
+                                  <Link
+                                    href={`/post/${slug}`}
+                                    className="font-bold text-blue-900 hover:text-blue-700 hover:underline leading-snug block line-clamp-2"
+                                    title="View authentic SarkariResult notification table"
+                                  >
+                                    {it.title}
+                                  </Link>
+                                  <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                                    {it.badge && (
+                                      <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                        {it.badge}
+                                      </span>
+                                    )}
+                                    <Link
+                                      href={`/post/${slug}`}
+                                      className="text-[10px] font-bold text-blue-700 hover:underline inline-flex items-center gap-0.5"
+                                    >
+                                      <span>Details</span> &rarr;
+                                    </Link>
+                                    <a
+                                      href={it.officialUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-[10px] font-bold text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded border border-emerald-200 ml-auto inline-flex items-center gap-1"
+                                      title={`Official government portal: ${it.officialUrl}`}
+                                    >
+                                      <span>Govt Portal</span>
+                                      <i className="fa-solid fa-arrow-up-right-from-square text-[8px]"></i>
+                                    </a>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })
+                        ) : (
+                          <div className="p-8 text-center text-xs text-slate-400">
+                            {liveBoardSearch ? "No jobs match your search." : "Loading latest jobs..."}
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
+                )}
 
-                  {/* 30+ Exam Pattern Cards Grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 max-h-[620px] overflow-y-auto custom-scrollbar pr-1">
-                    {filteredExams.map((e) => {
-                      const liveMatch = liveMatchedMap.get(e.id);
-                      const targetOfficialUrl = liveMatch?.officialUrl || e.defaultOfficialUrl;
-
-                      return (
-                        <label
-                          key={e.id}
-                          onClick={() => setSelectedExamId(e.id)}
-                          className={`border p-3.5 rounded-xl cursor-pointer hover:border-amber-500 hover:shadow-sm bg-slate-50 flex items-start gap-3 transition relative ${
-                            selectedExamId === e.id ? "ring-2 ring-amber-500 border-amber-500" : "border-slate-200"
+                {/* Filtered Single Board View (Result, Admit Card, or Latest Job) */}
+                {liveBoardTab !== "all" && (
+                  <div className="border-2 border-slate-300 rounded-xl overflow-hidden shadow-sm bg-white">
+                    <div
+                      className={`text-white py-3 px-5 font-black text-sm uppercase tracking-wide flex items-center justify-between ${
+                        liveBoardTab === "result"
+                          ? "bg-[#800000]"
+                          : liveBoardTab === "admit_card"
+                          ? "bg-[#1e3a8a]"
+                          : "bg-[#065f46]"
+                      }`}
+                    >
+                      <span className="flex items-center gap-2">
+                        <i
+                          className={`fa-solid ${
+                            liveBoardTab === "result"
+                              ? "fa-square-poll-vertical"
+                              : liveBoardTab === "admit_card"
+                              ? "fa-id-card"
+                              : "fa-briefcase"
                           }`}
-                        >
-                          <input
-                            type="radio"
-                            name="examBoardRadio"
-                            checked={selectedExamId === e.id}
-                            onChange={() => setSelectedExamId(e.id)}
-                            className="mt-1 accent-amber-500"
-                          />
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="font-bold text-slate-900 text-sm leading-snug">{e.name}</div>
-                              <i className={`fa-solid ${e.icon} text-amber-600 mt-0.5`}></i>
+                        ></i>
+                        <span>
+                          {liveBoardTab === "result"
+                            ? "All Results"
+                            : liveBoardTab === "admit_card"
+                            ? "All Admit Cards"
+                            : "All Latest Recruitment Jobs"}
+                        </span>
+                      </span>
+                      <span className="text-[10px] bg-black/40 px-2.5 py-0.5 rounded-full font-bold">
+                        {(liveBoardTab === "result"
+                          ? resultBoardItems
+                          : liveBoardTab === "admit_card"
+                          ? admitCardBoardItems
+                          : latestJobBoardItems
+                        ).length}{" "}
+                        Entries
+                      </span>
+                    </div>
+
+                    <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[600px] overflow-y-auto custom-scrollbar">
+                      {(liveBoardTab === "result"
+                        ? resultBoardItems
+                        : liveBoardTab === "admit_card"
+                        ? admitCardBoardItems
+                        : latestJobBoardItems
+                      ).map((it, idx) => {
+                        const slug = getItemSlug(it);
+                        return (
+                          <div
+                            key={idx}
+                            className="p-3.5 rounded-xl border border-slate-200 hover:border-slate-400 hover:shadow-sm bg-slate-50/60 hover:bg-white transition flex flex-col justify-between space-y-3"
+                          >
+                            <div>
+                              <div className="flex items-center justify-between gap-1.5 mb-1.5">
+                                <span
+                                  className={`text-[9px] font-black uppercase px-2 py-0.5 rounded ${
+                                    liveBoardTab === "result"
+                                      ? "bg-red-100 text-red-800"
+                                      : liveBoardTab === "admit_card"
+                                      ? "bg-blue-100 text-blue-800"
+                                      : "bg-emerald-100 text-emerald-800"
+                                  }`}
+                                >
+                                  {it.badge || "ACTIVE 2026"}
+                                </span>
+                              </div>
+                              <Link
+                                href={`/post/${slug}`}
+                                className="font-bold text-xs sm:text-sm text-blue-900 hover:text-blue-700 hover:underline leading-snug line-clamp-3 block"
+                              >
+                                {it.title}
+                              </Link>
                             </div>
 
-                            <p className="text-[11px] text-slate-500 mt-1">
-                              {e.duration} min • {e.speed}
-                            </p>
-
-                            <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
-                                {e.note}
-                              </span>
-                              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-200 text-slate-600">
-                                {e.language}
-                              </span>
-
-                              {/* LIVE 2026 Badge for Active Recruitments */}
-                              {liveMatch && (
-                                <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-red-100 text-red-700 border border-red-300 flex items-center gap-1">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse"></span>
-                                  LIVE 2026
-                                </span>
-                              )}
-
-                              {/* Direct Official Govt Portal Redirection Link */}
+                            <div className="flex items-center justify-between pt-2 border-t border-slate-200 text-xs">
+                              <Link
+                                href={`/post/${slug}`}
+                                className="font-bold text-blue-700 hover:underline inline-flex items-center gap-1"
+                              >
+                                <span>Details Table</span> &rarr;
+                              </Link>
                               <a
-                                href={targetOfficialUrl}
+                                href={it.officialUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                onClick={(ev) => ev.stopPropagation()}
-                                className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-2 py-0.5 rounded border border-blue-200 ml-auto transition"
-                                title={`Open official portal: ${targetOfficialUrl}`}
+                                className="font-bold text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 px-2 py-1 rounded border border-emerald-200 inline-flex items-center gap-1"
+                                title={`Direct link to government portal: ${it.officialUrl}`}
                               >
-                                <span>Official Portal</span>
-                                <i className="fa-solid fa-arrow-up-right-from-square text-[8px]"></i>
+                                <span>Govt Portal</span>
+                                <i className="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
                               </a>
                             </div>
                           </div>
-                        </label>
-                      );
-                    })}
-                  </div>
-
-                  {filteredExams.length === 0 && (
-                    <div className="text-center py-6 text-sm text-slate-500">
-                      No matching exam found. Try another search or category.
-                    </div>
-                  )}
-
-                  {/* Typing Test History */}
-                  <div className="bg-white border border-slate-200 rounded-xl p-3 space-y-2.5">
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <h3 className="font-bold text-slate-900 text-sm">
-                          <i className="fa-solid fa-clock-rotate-left mr-2 text-blue-600"></i>
-                          My Typing Test History
-                        </h3>
-                        <p className="text-xs text-slate-500">Your exam attempts are saved in this browser.</p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={clearExamHistory}
-                        className="text-xs font-bold text-red-600 hover:text-red-700"
-                      >
-                        Clear History
-                      </button>
-                    </div>
-
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                      <div className="bg-slate-50 border border-slate-200 rounded-lg p-2 text-center">
-                        <div className="text-[10px] uppercase font-bold text-slate-500">Attempts</div>
-                        <div className="text-lg font-black text-slate-900">{examHistory.length}</div>
-                      </div>
-                      <div className="bg-slate-50 border border-slate-200 rounded-lg p-2 text-center">
-                        <div className="text-[10px] uppercase font-bold text-slate-500">Qualified</div>
-                        <div className="text-lg font-black text-slate-900">
-                          {examHistory.filter((x) => x.status === "QUALIFIED").length}
-                        </div>
-                      </div>
-                      <div className="bg-slate-50 border border-slate-200 rounded-lg p-2 text-center">
-                        <div className="text-[10px] uppercase font-bold text-slate-500">Avg Net WPM</div>
-                        <div className="text-lg font-black text-slate-900">
-                          {examHistory.length
-                            ? Math.round(examHistory.reduce((a, x) => a + (x.netWpm || 0), 0) / examHistory.length)
-                            : 0}
-                        </div>
-                      </div>
-                      <div className="bg-slate-50 border border-slate-200 rounded-lg p-2 text-center">
-                        <div className="text-[10px] uppercase font-bold text-slate-500">Best Net WPM</div>
-                        <div className="text-lg font-black text-slate-900">
-                          {examHistory.length ? Math.max(...examHistory.map((x) => x.netWpm || 0)) : 0}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2 max-h-72 overflow-y-auto custom-scrollbar">
-                      {examHistory.length === 0 ? (
-                        <div className="text-center text-xs text-slate-400 py-4">
-                          No attempts yet. Complete an Exam Mode test to see your history.
-                        </div>
-                      ) : (
-                        examHistory.map((x) => (
-                          <div
-                            key={x.id}
-                            className="flex flex-wrap items-center justify-between gap-2 bg-slate-50 border border-slate-200 rounded-lg p-3"
-                          >
-                            <div className="min-w-0">
-                              <div className="font-bold text-xs text-slate-900 truncate">{x.examName}</div>
-                              <div className="text-[10px] text-slate-500">
-                                {x.date} • {x.language}
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-3 text-right">
-                              <div>
-                                <div className="text-[10px] text-slate-500">Net</div>
-                                <div className="font-black text-sm">{x.netWpm} WPM</div>
-                              </div>
-                              <div>
-                                <div className="text-[10px] text-slate-500">Accuracy</div>
-                                <div className="font-black text-sm">{x.accuracy}%</div>
-                              </div>
-                              <span
-                                className={`text-[10px] font-black px-2 py-1 rounded-full ${
-                                  x.status === "QUALIFIED"
-                                    ? "bg-green-100 text-green-700"
-                                    : x.status === "NOT QUALIFIED"
-                                    ? "bg-red-100 text-red-700"
-                                    : "bg-amber-100 text-amber-700"
-                                }`}
-                              >
-                                {x.status}
-                              </span>
-                            </div>
-                          </div>
-                        ))
-                      )}
+                        );
+                      })}
                     </div>
                   </div>
-
-                  <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl space-y-2">
-                    <h3 className="font-bold text-amber-900 text-base">
-                      <i className="fa-solid fa-triangle-exclamation mr-2"></i> Exam Guidelines &amp; Rules
-                    </h3>
-                    <ul className="list-disc list-inside text-xs text-amber-800 space-y-1">
-                      <li>
-                        <strong>Practice simulation:</strong> This tool is for preparation and mirrors official test formats.
-                      </li>
-                      <li>
-                        <strong>Pattern:</strong> Duration, language, speed, font, error calculation and qualifying rules are loaded for the selected exam pattern.
-                      </li>
-                      <li>
-                        <strong>Direct Official Portal Redirection:</strong> Click &quot;Official Portal ↗&quot; on any card to visit the authentic recruitment authority website (ssc.gov.in, rrbcdg.gov.in, etc.).
-                      </li>
-                      <li>Once started, the timer cannot be paused. Ensure your keyboard is functioning properly.</li>
-                    </ul>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
           </section>
@@ -2321,6 +2633,9 @@ export default function RootTypingPortalPage() {
             <div className="space-y-3">
               <div className="flex items-center space-x-3">
                 <svg
+                  width="32"
+                  height="32"
+                  style={{ width: "32px", height: "32px", minWidth: "32px", maxWidth: "32px", flexShrink: 0 }}
                   className="w-8 h-8 shrink-0"
                   viewBox="0 0 100 100"
                   fill="none"
@@ -2328,12 +2643,12 @@ export default function RootTypingPortalPage() {
                 >
                   <rect width="100" height="100" rx="20" fill="#f59e0b" />
                   <rect x="12" y="24" width="76" height="52" rx="10" fill="#1e3a8a" />
-                  <text x="50" y="58" fontSize="32" fontWeight="900" fill="#ffffff" textAnchor="middle">
-                    RV
+                  <text x="50" y="58" fontSize="28" fontWeight="900" fill="#ffffff" textAnchor="middle">
+                    SS
                   </text>
                 </svg>
                 <span className="text-xl font-black text-white">
-                  RV <span className="text-amber-400">TypingMaster</span>
+                  Sarkari <span className="text-amber-400">Selection</span>
                 </span>
               </div>
               <p className="text-xs text-slate-400 leading-relaxed">
@@ -2408,7 +2723,7 @@ export default function RootTypingPortalPage() {
             </div>
           </div>
           <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500">
-            <p>&copy; {new Date().getFullYear()} RV TypingMaster / Sarkari Selection. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} Sarkari Selection. All rights reserved.</p>
             <p className="mt-2 sm:mt-0">Official Government Examination Typing Practice Platform.</p>
           </div>
         </div>

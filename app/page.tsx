@@ -691,9 +691,9 @@ export default function RootTypingPortalPage() {
                     Sarkari <span className="text-amber-400">Selection</span>
                   </span>
                 </div>
-                <span className="text-[11px] text-blue-200 tracking-wide font-medium whitespace-nowrap">
+                {/* <span className="text-[11px] text-blue-200 tracking-wide font-medium whitespace-nowrap">
                   India&apos;s Leading Govt Jobs, Results &amp; Typing Examination Portal
-                </span>
+                </span> */}
               </div>
             </div>
 

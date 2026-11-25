@@ -169,7 +169,7 @@ export default function RootTypingPortalPage() {
   // Auth & Subscription Modal
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "pricing">("login");
-  const [authButtonText, setAuthButtonText] = useState("Login / Subscribe");
+  const [authButtonText, setAuthButtonText] = useState("Login");
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
 
@@ -689,9 +689,6 @@ export default function RootTypingPortalPage() {
                 <div className="flex items-center gap-1.5">
                   <span className="text-xl sm:text-2xl font-black tracking-tight text-white whitespace-nowrap uppercase">
                     Sarkari <span className="text-amber-400">Selection</span>
-                  </span>
-                  <span className="bg-amber-400 text-blue-950 text-[9px] font-black px-1.5 py-0.2 rounded uppercase tracking-wider hidden sm:inline-block">
-                    Official
                   </span>
                 </div>
                 <span className="text-[11px] text-blue-200 tracking-wide font-medium whitespace-nowrap">

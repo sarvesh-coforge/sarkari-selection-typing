@@ -1,1 +1,7 @@
-export { GET, dynamic } from "@/app/api/sarkari-updates/route";
+import { GET as getUpdates } from "@/app/api/sarkari-updates/route";
+
+export const dynamic = "force-dynamic";
+
+export async function GET() {
+  return getUpdates();
+}

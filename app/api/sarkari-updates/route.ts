@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import connectToDatabase from "@/lib/mongodb";
 import SarkariSnapshot from "@/models/SarkariSnapshot";
-import { runRollingSarkariSync } from "@/app/api/sync-sarkari/route";
+import { runRollingSarkariSync } from "@/lib/scraper/sarkariCrawler";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +20,6 @@ export async function GET() {
 
     let snapshot: any = await SarkariSnapshot.findOne({ isActive: true }).sort({ version: -1 }).lean();
 
-    // If database is empty, perform initial live crawl
     if (!snapshot) {
       snapshot = await runRollingSarkariSync();
     }

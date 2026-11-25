@@ -695,3 +695,47 @@ export async function getOrScrapePostDetail(slug: string, passedTitle?: string, 
 
   return parsedDetail;
 }
+
+/**
+ * Executes a live SarkariResult crawl, validates core categories, saves as active
+ * version in MongoDB, and enforces the strict 3-version rolling retention policy.
+ */
+export async function runRollingSarkariSync() {
+  const db = await connectToDatabase();
+  if (!db) {
+    throw new Error("MongoDB connection unavailable. Cannot persist SarkariResult snapshot.");
+  }
+
+  const { hotUpdates, categories } = await scrapeSarkariResultLive();
+
+  if (
+    categories.result.length === 0 ||
+    categories.admitCard.length === 0 ||
+    categories.latestJob.length === 0
+  ) {
+    throw new Error(
+      `Aborted sync: core categories incomplete (Result: ${categories.result.length}, Admit Card: ${categories.admitCard.length}, Latest Job: ${categories.latestJob.length}). Previous active snapshot preserved.`
+    );
+  }
+
+  const latest = await SarkariSnapshot.findOne().sort({ version: -1 }).select("version").lean();
+  const nextVersion = latest && typeof latest.version === "number" ? latest.version + 1 : 1;
+
+  await SarkariSnapshot.updateMany({ isActive: true }, { $set: { isActive: false } });
+
+  const created = await SarkariSnapshot.create({
+    version: nextVersion,
+    syncedAt: new Date(),
+    isActive: true,
+    hotUpdates,
+    categories,
+  });
+
+  const allVersions = await SarkariSnapshot.find().sort({ version: -1 }).select("_id version").lean();
+  if (allVersions.length > 3) {
+    const idsToDelete = allVersions.slice(3).map((doc) => doc._id);
+    await SarkariSnapshot.deleteMany({ _id: { $in: idsToDelete } });
+  }
+
+  return created.toObject();
+}

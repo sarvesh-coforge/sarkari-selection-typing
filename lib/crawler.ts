@@ -315,282 +315,401 @@ export function matchExamPatternIds(title: string): string[] {
   return matched;
 }
 
-// 8 Top Colored Quick Access Hot Updates
+// 8 Top Colored Quick Access Hot Updates (Matching exact SarkariResult colors)
 const QUICK_ACCESS_HOT_UPDATES: IPortalItem[] = [
   {
-    title: "UPPSC RO ARO 2026 Recruitment Online Application Live",
-    slug: "uppsc-ro-aro-2026-apply-online",
+    title: "UPESSC TGT Online Form (17,735 Posts)",
+    slug: "upessc-tgt-online-form-17735-posts",
+    officialUrl: "https://upessc.up.gov.in/",
+    url: "https://www.sarkariresult.com/2026/upessc-tgt-2026/",
+    category: "hot_update",
+    badge: "17,735 Posts",
+    colorClass: "bg-[#ff0000] hover:bg-red-700 text-white",
+    matchedExamIds: [],
+  },
+  {
+    title: "Daily 5 Minutes Meditation & Crack Exams",
+    slug: "daily-5-minutes-meditation-crack-exams",
+    officialUrl: "https://www.sarkariresult.com/",
+    url: "https://www.sarkariresult.com/",
+    category: "hot_update",
+    badge: "Exam Prep",
+    colorClass: "bg-[#ff6600] hover:bg-orange-700 text-white",
+    matchedExamIds: [],
+  },
+  {
+    title: "UPSSSC JE Online Form (1156 Posts)",
+    slug: "upsssc-je-online-form-1156-posts",
+    officialUrl: "https://upsssc.gov.in/",
+    url: "https://www.sarkariresult.com/upsssc/upsssc-je-2026/",
+    category: "hot_update",
+    badge: "1156 Posts",
+    colorClass: "bg-[#ff00ff] hover:bg-fuchsia-700 text-white",
+    matchedExamIds: ["upsssc_ja"],
+  },
+  {
+    title: "UPPSC RO/ARO Online Form (501 Posts)",
+    slug: "uppsc-ro-aro-online-form-501-posts",
     officialUrl: "https://uppsc.up.nic.in/",
     url: "https://www.sarkariresult.com/2026/uppsc-ro-aro-2026/",
     category: "hot_update",
-    badge: "Apply Online",
-    colorClass: "bg-red-700 hover:bg-red-800 text-white",
+    badge: "501 Posts",
+    colorClass: "bg-[#0000a0] hover:bg-blue-950 text-white",
     matchedExamIds: ["uppsc_computer_assistant"],
   },
   {
-    title: "Railway RRB NTPC (CEN 05/2024 & 06/2024) 11,558 Posts Form",
-    slug: "railway-rrb-ntpc-11558-posts-online-form",
-    officialUrl: "https://www.rrbcdg.gov.in/",
-    url: "https://www.sarkariresult.com/railway/rrb-ntpc-2024/",
+    title: "UPSSSC Inter 12th Level Form (1784 Posts)",
+    slug: "upsssc-inter-12th-level-form-1784-posts",
+    officialUrl: "https://upsssc.gov.in/",
+    url: "https://www.sarkariresult.com/upsssc/upsssc-inter-level-2026/",
     category: "hot_update",
-    badge: "11,558 Posts",
-    colorClass: "bg-blue-700 hover:bg-blue-800 text-white",
-    matchedExamIds: ["rrb_ntpc"],
+    badge: "1784 Posts",
+    colorClass: "bg-[#808000] hover:bg-lime-800 text-white",
+    matchedExamIds: ["upsssc_ja"],
   },
   {
-    title: "SSC GD Constable 2025 Tier I Examination Final Result",
-    slug: "ssc-gd-constable-2025-final-result",
-    officialUrl: "https://ssc.gov.in/",
-    url: "https://www.sarkariresult.com/ssc/ssc-gd-2025/",
+    title: "Assam Rifles Technical / Tradesman Form",
+    slug: "assam-rifles-technical-tradesman-form",
+    officialUrl: "https://www.assamrifles.gov.in/",
+    url: "https://www.sarkariresult.com/force/assam-rifles-tradesman-2026/",
     category: "hot_update",
-    badge: "Result Out",
-    colorClass: "bg-amber-600 hover:bg-amber-700 text-slate-900 font-black",
+    badge: "Apply Online",
+    colorClass: "bg-[#0080ff] hover:bg-sky-600 text-white",
     matchedExamIds: [],
   },
   {
-    title: "SSC CHSL (10+2) Tier-II Computer Typing Test Admit Card",
-    slug: "ssc-chsl-tier-2-typing-test-admit-card",
-    officialUrl: "https://ssc.gov.in/",
-    url: "https://www.sarkariresult.com/ssc/ssc-chsl-2024/",
-    category: "hot_update",
-    badge: "Typing Test",
-    colorClass: "bg-emerald-700 hover:bg-emerald-800 text-white",
-    matchedExamIds: ["ssc_chsl"],
-  },
-  {
-    title: "UP Police Constable 60,244 Posts Final Selection Merit List",
-    slug: "up-police-constable-60244-posts-final-result",
-    officialUrl: "https://uppbpb.gov.in/",
-    url: "https://www.sarkariresult.com/police/up-police-constable-2024/",
-    category: "hot_update",
-    badge: "60,244 Posts",
-    colorClass: "bg-indigo-700 hover:bg-indigo-800 text-white",
-    matchedExamIds: ["up_police_asi_clerk"],
-  },
-  {
-    title: "DSSSB Junior Assistant, LDC & Steno (05/2024) Form",
-    slug: "dsssb-junior-assistant-ldc-steno-form",
+    title: "DSSSB MTS & JE Form (1260 Posts)",
+    slug: "dsssb-mts-je-form-1260-posts",
     officialUrl: "https://dsssb.delhi.gov.in/",
-    url: "https://www.sarkariresult.com/delhi/dsssb-various-05-2024/",
+    url: "https://www.sarkariresult.com/delhi/dsssb-mts-je-2026/",
     category: "hot_update",
-    badge: "Online Form",
-    colorClass: "bg-purple-700 hover:bg-purple-800 text-white",
+    badge: "1260 Posts",
+    colorClass: "bg-[#600000] hover:bg-red-950 text-white",
     matchedExamIds: ["dsssb_ja_ldc"],
   },
   {
-    title: "Allahabad High Court Group C & D Clerical Cadre Form",
-    slug: "allahabad-high-court-group-c-d-recruitment",
-    officialUrl: "https://www.allahabadhighcourt.in/",
-    url: "https://www.sarkariresult.com/court/allahabad-hc-group-c-d/",
+    title: "RRB Station Master Online Form (1265 Posts)",
+    slug: "rrb-station-master-online-form-1265-posts",
+    officialUrl: "https://www.rrbcdg.gov.in/",
+    url: "https://www.sarkariresult.com/railway/rrb-station-master-2026/",
     category: "hot_update",
-    badge: "Court Job",
-    colorClass: "bg-teal-700 hover:bg-teal-800 text-white",
-    matchedExamIds: ["allahabad_hc"],
-  },
-  {
-    title: "NTA NEET UG 2026 Online Registration & Application Form",
-    slug: "nta-neet-ug-2026-online-form",
-    officialUrl: "https://nta.ac.in/",
-    url: "https://www.sarkariresult.com/nta/neet-2026/",
-    category: "hot_update",
-    badge: "NTA Exam",
-    colorClass: "bg-cyan-800 hover:bg-cyan-900 text-white",
-    matchedExamIds: [],
+    badge: "1265 Posts",
+    colorClass: "bg-[#008000] hover:bg-green-800 text-white",
+    matchedExamIds: ["rrb_ntpc"],
   },
 ];
 
-// Rich Fallback Seed Items for Result, Admit Card, Latest Job
+// Rich Fallback Seed Items matching SarkariResult.com Results, Admit Cards, and Latest Jobs
 const FALLBACK_SEED_ITEMS: IPortalItem[] = [
   ...QUICK_ACCESS_HOT_UPDATES,
 
-  // 1. Classic Result Board (Maroon Column)
+  // 1. Results Board
   {
-    title: "SSC Combined Higher Secondary Level CHSL 2024 Final Typing Result",
-    slug: "ssc-chsl-2024-final-typing-result",
-    officialUrl: "https://ssc.gov.in/",
-    url: "https://www.sarkariresult.com/ssc/ssc-chsl-2024-result/",
+    title: "SBI Junior Associates Clerk Backlog Mains Result 2026",
+    slug: "sbi-junior-associates-clerk-backlog-mains-result-2026",
+    officialUrl: "https://sbi.co.in/web/careers",
+    url: "https://www.sarkariresult.com/bank/sbi-clerk-backlog-2026/",
     category: "result",
-    badge: "Final List",
-    postDate: "2026",
-    matchedExamIds: ["ssc_chsl"],
-  },
-  {
-    title: "UPSSSC Junior Assistant 08/2022 Stage-II Typing Qualifying Scorecard",
-    slug: "upsssc-junior-assistant-08-2022-typing-scorecard",
-    officialUrl: "https://upsssc.gov.in/",
-    url: "https://www.sarkariresult.com/upsssc/junior-assistant-08-2022/",
-    category: "result",
-    badge: "Typing Result",
-    matchedExamIds: ["upsssc_ja"],
-  },
-  {
-    title: "Allahabad High Court RO ARO & Computer Assistant Selection List",
-    slug: "allahabad-high-court-ro-aro-selection-list",
-    officialUrl: "https://www.allahabadhighcourt.in/",
-    url: "https://www.sarkariresult.com/court/allahabad-hc-ro-aro-result/",
-    category: "result",
-    badge: "Merit List",
-    matchedExamIds: ["allahabad_hc"],
-  },
-  {
-    title: "IBPS RRB XIII Office Assistant Multipurpose Mains Final Result",
-    slug: "ibps-rrb-xiii-office-assistant-mains-result",
-    officialUrl: "https://www.ibps.in/",
-    url: "https://www.sarkariresult.com/bank/ibps-rrb-xiii-clerk-result/",
-    category: "result",
-    badge: "Scorecard",
+    badge: "Result",
     matchedExamIds: [],
   },
   {
-    title: "Bihar SSC Inter Level Examination Qualifying Result & Typing Schedule",
-    slug: "bihar-ssc-inter-level-typing-schedule",
-    officialUrl: "https://bssc.bihar.gov.in/",
-    url: "https://www.sarkariresult.com/bihar/bssc-inter-level-result/",
+    title: "Rajasthan State Eligibility Test SET Score Card 2026",
+    slug: "rajasthan-state-eligibility-test-set-score-card-2026",
+    officialUrl: "https://rpsc.rajasthan.gov.in/",
+    url: "https://www.sarkariresult.com/rpsc/rajasthan-set-2026/",
     category: "result",
+    badge: "Score Card",
+    matchedExamIds: [],
+  },
+  {
+    title: "UPCISB UP Co-operative Bank Various Post Final Result 2026",
+    slug: "upcisb-up-co-operative-bank-various-post-final-result-2026",
+    officialUrl: "https://upsevamandal.org/",
+    url: "https://www.sarkariresult.com/bank/upcisb-bank-result-2026/",
+    category: "result",
+    badge: "Final Result",
+    matchedExamIds: [],
+  },
+  {
+    title: "UPSSSC Excise Constable Result 2026 – Out",
+    slug: "upsssc-excise-constable-result-2026-out",
+    officialUrl: "https://upsssc.gov.in/",
+    url: "https://www.sarkariresult.com/upsssc/upsssc-excise-constable-2026/",
+    category: "result",
+    badge: "Out",
+    matchedExamIds: [],
+  },
+  {
+    title: "BPSC DSO/ AD Final Result 2026",
+    slug: "bpsc-dso-ad-final-result-2026",
+    officialUrl: "https://www.bpsc.bih.nic.in/",
+    url: "https://www.sarkariresult.com/bihar/bpsc-dso-ad-2026/",
+    category: "result",
+    badge: "Final Result",
+    matchedExamIds: [],
+  },
+  {
+    title: "NICL Assistant Score Card 2026",
+    slug: "nicl-assistant-score-card-2026",
+    officialUrl: "https://nationalinsurance.nic.co.in/",
+    url: "https://www.sarkariresult.com/bank/nicl-assistant-2026/",
+    category: "result",
+    badge: "Score Card",
+    matchedExamIds: [],
+  },
+  {
+    title: "UPSSSC Computer Operator Eligibility Result 2026",
+    slug: "upsssc-computer-operator-eligibility-result-2026",
+    officialUrl: "https://upsssc.gov.in/",
+    url: "https://www.sarkariresult.com/upsssc/upsssc-computer-operator-2026/",
+    category: "result",
+    matchedExamIds: ["upsssc_ja"],
+  },
+  {
+    title: "UPSSSC Livestock Extension Officer Eligibility Result 2026",
+    slug: "upsssc-livestock-extension-officer-eligibility-result-2026",
+    officialUrl: "https://upsssc.gov.in/",
+    url: "https://www.sarkariresult.com/upsssc/upsssc-livestock-officer-2026/",
+    category: "result",
+    matchedExamIds: [],
+  },
+  {
+    title: "UPSSSC Veterinary Pharmacist Eligibility Result 2026",
+    slug: "upsssc-veterinary-pharmacist-eligibility-result-2026",
+    officialUrl: "https://upsssc.gov.in/",
+    url: "https://www.sarkariresult.com/upsssc/upsssc-veterinary-pharmacist-2026/",
+    category: "result",
+    matchedExamIds: [],
+  },
+  {
+    title: "UP Special TET Result 2026 – Out",
+    slug: "up-special-tet-result-2026-out",
+    officialUrl: "https://updeled.gov.in/",
+    url: "https://www.sarkariresult.com/2026/up-special-tet-2026/",
+    category: "result",
+    badge: "Out",
+    matchedExamIds: [],
+  },
+  {
+    title: "UPESSC Principal Result 2026 – Out",
+    slug: "upessc-principal-result-2026-out",
+    officialUrl: "https://upessc.up.gov.in/",
+    url: "https://www.sarkariresult.com/2026/upessc-principal-2026/",
+    category: "result",
+    badge: "Out",
+    matchedExamIds: [],
+  },
+  {
+    title: "IBPS CRP PO MT XVI Mains Result 2026 – Out",
+    slug: "ibps-crp-po-mt-xvi-mains-result-2026-out",
+    officialUrl: "https://www.ibps.in/",
+    url: "https://www.sarkariresult.com/bank/ibps-po-xvi-2026/",
+    category: "result",
+    badge: "Out",
+    matchedExamIds: [],
+  },
+
+  // 2. Admit Cards Board
+  {
+    title: "SSC CPO SI 2025 Paper-II Admit Card – Out",
+    slug: "ssc-cpo-si-2025-paper-ii-admit-card-out",
+    officialUrl: "https://ssc.gov.in/",
+    url: "https://www.sarkariresult.com/ssc/ssc-cpo-si-2025/",
+    category: "admit_card",
+    badge: "Out",
+    matchedExamIds: [],
+  },
+  {
+    title: "UPSSSC Cane Supervisor Admit Card 2026 – Out",
+    slug: "upsssc-cane-supervisor-admit-card-2026-out",
+    officialUrl: "https://upsssc.gov.in/",
+    url: "https://www.sarkariresult.com/upsssc/upsssc-cane-supervisor-2026/",
+    category: "admit_card",
+    badge: "Out",
+    matchedExamIds: [],
+  },
+  {
+    title: "SSC CHSL 10+2 Tier-I Exam City Details 2026",
+    slug: "ssc-chsl-10-2-tier-i-exam-city-details-2026",
+    officialUrl: "https://ssc.gov.in/",
+    url: "https://www.sarkariresult.com/ssc/ssc-chsl-2026/",
+    category: "admit_card",
+    badge: "Exam City",
+    matchedExamIds: ["ssc_chsl"],
+  },
+  {
+    title: "UPESSC UP Primary Teacher Exam City Details 2026",
+    slug: "upessc-up-primary-teacher-exam-city-details-2026",
+    officialUrl: "https://upessc.up.gov.in/",
+    url: "https://www.sarkariresult.com/2026/upessc-primary-teacher-2026/",
+    category: "admit_card",
+    badge: "Exam City",
+    matchedExamIds: [],
+  },
+  {
+    title: "UPSSSC Moharir 2022 Admit Card – Out",
+    slug: "upsssc-moharir-2022-admit-card-out",
+    officialUrl: "https://upsssc.gov.in/",
+    url: "https://www.sarkariresult.com/upsssc/upsssc-moharir-2022/",
+    category: "admit_card",
+    badge: "Out",
+    matchedExamIds: [],
+  },
+  {
+    title: "RRVUNL JE, Junior Assistant Admit Card 2026",
+    slug: "rrvunl-je-junior-assistant-admit-card-2026",
+    officialUrl: "https://energy.rajasthan.gov.in/rvunl",
+    url: "https://www.sarkariresult.com/rpsc/rrvunl-je-ja-2026/",
+    category: "admit_card",
+    badge: "Admit Card",
+    matchedExamIds: [],
+  },
+  {
+    title: "GIMS Noida Staff Nurse Admit Card 2026",
+    slug: "gims-noida-staff-nurse-admit-card-2026",
+    officialUrl: "https://gims.ac.in/",
+    url: "https://www.sarkariresult.com/2026/gims-noida-staff-nurse-2026/",
+    category: "admit_card",
+    badge: "Admit Card",
+    matchedExamIds: [],
+  },
+  {
+    title: "Bihar BSSC Stenographer Exam City Details 2026",
+    slug: "bihar-bssc-stenographer-exam-city-details-2026",
+    officialUrl: "https://bssc.bihar.gov.in/",
+    url: "https://www.sarkariresult.com/bihar/bssc-stenographer-2026/",
+    category: "admit_card",
+    badge: "Exam City",
     matchedExamIds: ["bihar_clerk"],
   },
   {
-    title: "NTA UGC NET December 2025 Session Scorecard & Cutoff Marks",
-    slug: "nta-ugc-net-december-2025-scorecard",
-    officialUrl: "https://nta.ac.in/",
-    url: "https://www.sarkariresult.com/nta/ugc-net-dec-2025/",
-    category: "result",
-    badge: "Cutoff",
+    title: "BHEL Artisan Various Trade Post Exam Date 2026",
+    slug: "bhel-artisan-various-trade-post-exam-date-2026",
+    officialUrl: "https://careers.bhel.in/",
+    url: "https://www.sarkariresult.com/2026/bhel-artisan-2026/",
+    category: "admit_card",
+    badge: "Exam Date",
     matchedExamIds: [],
   },
   {
-    title: "Delhi High Court Junior Judicial Assistant JJA Stage I Written Result",
-    slug: "delhi-high-court-jja-written-result",
-    officialUrl: "https://delhihighcourt.nic.in/",
-    url: "https://www.sarkariresult.com/court/delhi-hc-jja-result/",
-    category: "result",
-    matchedExamIds: ["delhi_hc_jja"],
-  },
-
-  // 2. Classic Admit Card Board (Blue Column)
-  {
-    title: "SSC CHSL 2024 Tier-II Computer Based Typing Test Call Letter",
-    slug: "ssc-chsl-2024-tier-2-typing-call-letter",
-    officialUrl: "https://ssc.gov.in/",
-    url: "https://www.sarkariresult.com/ssc/ssc-chsl-tier-2-admit/",
-    category: "admit_card",
-    badge: "Skill Test",
-    matchedExamIds: ["ssc_chsl"],
-  },
-  {
-    title: "RRB NTPC Computer Based Typing Skill Test CBTST Hall Ticket",
-    slug: "rrb-ntpc-cbtst-typing-hall-ticket",
+    title: "RRB NTPC 10+2 UG CBTST Admit Card 2026",
+    slug: "rrb-ntpc-10-2-ug-cbtst-admit-card-2026",
     officialUrl: "https://www.rrbcdg.gov.in/",
-    url: "https://www.sarkariresult.com/railway/rrb-ntpc-cbtst-admit/",
+    url: "https://www.sarkariresult.com/railway/rrb-ntpc-ug-cbtst-2026/",
     category: "admit_card",
-    badge: "CBTST Slip",
+    badge: "CBTST",
     matchedExamIds: ["rrb_ntpc"],
   },
   {
-    title: "Delhi High Court Senior Judicial Assistant Restorer Typing Admit Card",
-    slug: "delhi-high-court-sja-restorer-typing-admit-card",
-    officialUrl: "https://delhihighcourt.nic.in/",
-    url: "https://www.sarkariresult.com/court/delhi-hc-sja-admit/",
+    title: "NTA UGC NET JRF December Exam Admit Card 2026",
+    slug: "nta-ugc-net-jrf-december-exam-admit-card-2026",
+    officialUrl: "https://ugcnet.nta.ac.in/",
+    url: "https://www.sarkariresult.com/nta/ugc-net-dec-2026/",
     category: "admit_card",
     badge: "Admit Card",
-    matchedExamIds: ["delhi_hc_jja"],
-  },
-  {
-    title: "CISF Head Constable Ministerial Skill Evaluation Call Letter",
-    slug: "cisf-head-constable-ministerial-skill-admit-card",
-    officialUrl: "https://cisfrectt.cisf.gov.in/",
-    url: "https://www.sarkariresult.com/police/cisf-hcm-skill-admit/",
-    category: "admit_card",
-    badge: "Live",
     matchedExamIds: [],
-  },
-  {
-    title: "UP Police ASI Clerk Accounts Typing Skill Test Call Letter",
-    slug: "up-police-asi-clerk-typing-admit-card",
-    officialUrl: "https://uppbpb.gov.in/",
-    url: "https://www.sarkariresult.com/police/up-police-asi-typing-admit/",
-    category: "admit_card",
-    matchedExamIds: ["up_police_asi_clerk"],
-  },
-  {
-    title: "NTA JEE Main 2026 Session 1 Hall Ticket & City Intimation Slip",
-    slug: "nta-jee-main-2026-session-1-admit-card",
-    officialUrl: "https://nta.ac.in/",
-    url: "https://www.sarkariresult.com/nta/jee-main-2026-admit/",
-    category: "admit_card",
-    badge: "City Slip",
-    matchedExamIds: [],
-  },
-  {
-    title: "Punjab & Haryana High Court Clerk Computer Typing Test Roll Number",
-    slug: "punjab-haryana-high-court-clerk-typing-admit-card",
-    officialUrl: "https://highcourtchd.gov.in/",
-    url: "https://www.sarkariresult.com/court/phhc-clerk-admit/",
-    category: "admit_card",
-    matchedExamIds: ["punjab_hc_clerk"],
   },
 
-  // 3. Classic Latest Job Board (Emerald/Red Column)
+  // 3. Latest Jobs Board
   {
-    title: "UPPSC Review Officer RO Assistant Review Officer ARO Recruitment 2026",
-    slug: "uppsc-review-officer-ro-aro-recruitment-2026",
+    title: "Railway RRB Station Master Online Form 2026 – Last Date Today",
+    slug: "railway-rrb-station-master-online-form-2026-last-date-today",
+    officialUrl: "https://www.rrbcdg.gov.in/",
+    url: "https://www.sarkariresult.com/railway/rrb-station-master-2026/",
+    category: "latest_job",
+    badge: "Last Date",
+    matchedExamIds: ["rrb_ntpc"],
+  },
+  {
+    title: "UPTET Exam 2027 Online Form – Start",
+    slug: "uptet-exam-2027-online-form-start",
+    officialUrl: "https://updeled.gov.in/",
+    url: "https://www.sarkariresult.com/2026/uptet-2027/",
+    category: "latest_job",
+    badge: "Online Form",
+    matchedExamIds: [],
+  },
+  {
+    title: "UPSSSC Junior Engineer JE (Mechanical) Online Form 2026 (1156 Posts) – Last Date Today",
+    slug: "upsssc-junior-engineer-je-mechanical-online-form-2026-1156-posts",
+    officialUrl: "https://upsssc.gov.in/",
+    url: "https://www.sarkariresult.com/upsssc/upsssc-je-2026/",
+    category: "latest_job",
+    badge: "Last Date",
+    matchedExamIds: [],
+  },
+  {
+    title: "Supreme Court Junior Court Attendant Online Form 2026 – Last Date Today",
+    slug: "supreme-court-junior-court-attendant-online-form-2026-last-date-today",
+    officialUrl: "https://www.sci.gov.in/",
+    url: "https://www.sarkariresult.com/court/sci-jca-2026/",
+    category: "latest_job",
+    badge: "Last Date",
+    matchedExamIds: ["court_clerical"],
+  },
+  {
+    title: "UKPSC Lower PCS Online Form 2026",
+    slug: "ukpsc-lower-pcs-online-form-2026",
+    officialUrl: "https://psc.uk.gov.in/",
+    url: "https://www.sarkariresult.com/ukpsc/ukpsc-lower-pcs-2026/",
+    category: "latest_job",
+    badge: "Online Form",
+    matchedExamIds: [],
+  },
+  {
+    title: "UPPSC RO / ARO Online Form 2026",
+    slug: "uppsc-ro-aro-online-form-2026",
     officialUrl: "https://uppsc.up.nic.in/",
     url: "https://www.sarkariresult.com/2026/uppsc-ro-aro-2026/",
     category: "latest_job",
-    badge: "411 Posts",
+    badge: "Online Form",
     matchedExamIds: ["uppsc_computer_assistant"],
   },
   {
-    title: "RRB NTPC CEN 05/2024 & 06/2024 Graduate Under Graduate 11,558 Posts",
-    slug: "rrb-ntpc-cen-05-2024-graduate-11558-posts",
-    officialUrl: "https://www.rrbcdg.gov.in/",
-    url: "https://www.sarkariresult.com/railway/rrb-ntpc-11558-posts/",
-    category: "latest_job",
-    badge: "11,558 Posts",
-    matchedExamIds: ["rrb_ntpc"],
-  },
-  {
-    title: "SSC GD Constable 2025 Central Armed Police Forces 39,481 Posts",
-    slug: "ssc-gd-constable-2025-capf-39481-posts",
-    officialUrl: "https://ssc.gov.in/",
-    url: "https://www.sarkariresult.com/ssc/ssc-gd-constable-2025/",
-    category: "latest_job",
-    badge: "39,481 Posts",
-    matchedExamIds: [],
-  },
-  {
-    title: "DSSSB Junior Assistant, LDC, Stenographer Various Post 05/2024",
-    slug: "dsssb-junior-assistant-ldc-stenographer-2024",
-    officialUrl: "https://dsssb.delhi.gov.in/",
-    url: "https://www.sarkariresult.com/delhi/dsssb-junior-assistant-2024/",
-    category: "latest_job",
-    badge: "Apply Online",
-    matchedExamIds: ["dsssb_ja_ldc"],
-  },
-  {
-    title: "UPSSSC Junior Assistant & Clerical Cadre 2026 Registration",
-    slug: "upsssc-junior-assistant-clerical-cadre-2026",
+    title: "UPSSSC Inter (12th) Level Online Form 2026",
+    slug: "upsssc-inter-12th-level-online-form-2026",
     officialUrl: "https://upsssc.gov.in/",
-    url: "https://www.sarkariresult.com/upsssc/junior-assistant-2026/",
+    url: "https://www.sarkariresult.com/upsssc/upsssc-inter-level-2026/",
     category: "latest_job",
+    badge: "Online Form",
     matchedExamIds: ["upsssc_ja"],
   },
   {
-    title: "AIIMS Non-Faculty Administrative Assistant JAA Recruitment 2026",
-    slug: "aiims-non-faculty-administrative-assistant-jaa-2026",
-    officialUrl: "https://www.aiimsexams.ac.in/",
-    url: "https://www.sarkariresult.com/aiims/aiims-cre-jaa-2026/",
+    title: "UPESSC UP Headmaster Correction / Edit Form 2026 – Last Date Today",
+    slug: "upessc-up-headmaster-correction-edit-form-2026-last-date-today",
+    officialUrl: "https://upessc.up.gov.in/",
+    url: "https://www.sarkariresult.com/2026/upessc-headmaster-2026/",
     category: "latest_job",
-    badge: "AIIMS Exam",
-    matchedExamIds: ["aiims_cre_ja"],
+    badge: "Last Date",
+    matchedExamIds: [],
   },
   {
-    title: "India Post GDS Postal Assistant Sorting Assistant Online Form",
-    slug: "india-post-gds-postal-assistant-sorting-assistant-2026",
-    officialUrl: "https://indiapostgdsonline.gov.in/",
-    url: "https://www.sarkariresult.com/post/india-post-pa-sa-2026/",
+    title: "UPESSC UP Principal Inter Level Correction / Edit Form 2026 – Last Date Today",
+    slug: "upessc-up-principal-inter-level-correction-edit-form-2026-last-date-today",
+    officialUrl: "https://upessc.up.gov.in/",
+    url: "https://www.sarkariresult.com/2026/upessc-principal-inter-2026/",
     category: "latest_job",
-    matchedExamIds: ["india_post_pa_sa"],
+    badge: "Last Date",
+    matchedExamIds: [],
+  },
+  {
+    title: "RRB NTPC 10+2 UG Correction / Edit Form 2026 – Last Date Today",
+    slug: "rrb-ntpc-10-2-ug-correction-edit-form-2026-last-date-today",
+    officialUrl: "https://www.rrbcdg.gov.in/",
+    url: "https://www.sarkariresult.com/railway/rrb-ntpc-ug-2026/",
+    category: "latest_job",
+    badge: "Last Date",
+    matchedExamIds: ["rrb_ntpc"],
+  },
+  {
+    title: "Indian Bank Apprentice Online Form 2026 – Last Date Today",
+    slug: "indian-bank-apprentice-online-form-2026-last-date-today",
+    officialUrl: "https://www.indianbank.in/",
+    url: "https://www.sarkariresult.com/bank/indian-bank-apprentice-2026/",
+    category: "latest_job",
+    badge: "Last Date",
+    matchedExamIds: [],
   },
 ];
 
@@ -600,18 +719,51 @@ const FALLBACK_SEED_ITEMS: IPortalItem[] = [
  */
 export async function scrapeSarkariResult(): Promise<IPortalItem[]> {
   const items: IPortalItem[] = [];
-  const seenTitles = new Set<string>();
+  const seenKeys = new Set<string>();
+
+  const isNavOrNoise = (text: string) => {
+    const lower = text.toLowerCase().trim();
+    if (!lower || lower.length < 6) return true;
+    const exactBlacklist = new Set([
+      "home",
+      "latest jobs",
+      "latest job",
+      "results",
+      "result",
+      "admit card",
+      "admit cards",
+      "answer key",
+      "syllabus",
+      "admission",
+      "search",
+      "contact us",
+      "view more",
+      "click here",
+      "read more",
+      "sarkari result",
+      "sarkariresult tools",
+      "android app",
+      "apple ios app",
+      "youtube",
+      "telegram",
+      "instagram",
+      "twitter",
+    ]);
+    return exactBlacklist.has(lower);
+  };
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 6000);
+    const timeoutId = setTimeout(() => controller.abort(), 9000);
 
     const response = await fetch("https://www.sarkariresult.com/", {
       signal: controller.signal,
       headers: {
         "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9,hi;q=0.8",
+        "Cache-Control": "no-cache",
       },
       next: { revalidate: 0 },
     });
@@ -622,91 +774,148 @@ export async function scrapeSarkariResult(): Promise<IPortalItem[]> {
       const html = await response.text();
       const $ = cheerio.load(html);
 
-      // 1. Top Colored Quick Access Hot Updates
+      // 1. Top 8 Colored Quick Access Hot Updates
+      // SarkariResult uses #image1..#image8 or colored div/td blocks
       const palette = [
-        "bg-red-700 hover:bg-red-800 text-white",
-        "bg-blue-700 hover:bg-blue-800 text-white",
-        "bg-amber-600 hover:bg-amber-700 text-slate-900 font-black",
-        "bg-emerald-700 hover:bg-emerald-800 text-white",
-        "bg-indigo-700 hover:bg-indigo-800 text-white",
-        "bg-purple-700 hover:bg-purple-800 text-white",
-        "bg-teal-700 hover:bg-teal-800 text-white",
-        "bg-cyan-800 hover:bg-cyan-900 text-white",
+        "bg-[#ff0000] hover:bg-red-700 text-white",
+        "bg-[#ff6600] hover:bg-orange-700 text-white",
+        "bg-[#ff00ff] hover:bg-fuchsia-700 text-white",
+        "bg-[#0000a0] hover:bg-blue-950 text-white",
+        "bg-[#808000] hover:bg-lime-800 text-white",
+        "bg-[#0080ff] hover:bg-sky-600 text-white",
+        "bg-[#600000] hover:bg-red-950 text-white",
+        "bg-[#008000] hover:bg-green-800 text-white",
       ];
       let hotIndex = 0;
 
-      $("marquee a, #box a, table.table-hover a, div#header a, div[style*='background'] a").each((_, el) => {
-        const text = $(el).text().trim();
-        const rawHref = $(el).attr("href")?.trim() || "";
-        if (text && text.length > 5 && !seenTitles.has(text.toLowerCase()) && hotIndex < 8) {
-          seenTitles.add(text.toLowerCase());
-          const officialUrl = resolveOfficialGovUrl(text, rawHref);
-          const matchedExamIds = matchExamPatternIds(text);
-          const slug = slugify(text);
+      const hotSelectors = [
+        "#image1 a, #image2 a, #image3 a, #image4 a, #image5 a, #image6 a, #image7 a, #image8 a",
+        "div[id^='image'] a",
+        "#marquee0 a, #marquee1 a, marquee a",
+        "td[bgcolor] a, div[style*='background'] a",
+      ];
 
-          items.push({
-            title: text,
-            slug,
-            officialUrl,
-            url: rawHref.startsWith("http") ? rawHref : `https://www.sarkariresult.com${rawHref}`,
-            category: "hot_update",
-            badge: text.includes("Apply") ? "Apply Online" : text.includes("Result") ? "Result" : "Trending",
-            colorClass: palette[hotIndex % palette.length],
-            matchedExamIds,
-          });
-          hotIndex++;
-        }
-      });
+      for (const sel of hotSelectors) {
+        if (hotIndex >= 8) break;
+        $(sel).each((_, el) => {
+          if (hotIndex >= 8) return;
+          const text = $(el).text().replace(/\s+/g, " ").trim();
+          const rawHref = $(el).attr("href")?.trim() || "";
+          if (isNavOrNoise(text)) return;
 
-      // 2. Parse 3-column boards (Result, Admit Card, Latest Job)
-      $("div, table, tr, td").each((_, block) => {
-        const headerText = $(block).find("h2, h3, b, strong, th").first().text().toLowerCase();
+          const key = `hot_update:${text.toLowerCase()}`;
+          if (!seenKeys.has(key)) {
+            seenKeys.add(key);
+            const officialUrl = resolveOfficialGovUrl(text, rawHref);
+            const matchedExamIds = matchExamPatternIds(text);
+            const slug = slugify(text);
+            const fullUrl = rawHref.startsWith("http")
+              ? rawHref
+              : rawHref.startsWith("/")
+              ? `https://www.sarkariresult.com${rawHref}`
+              : `https://www.sarkariresult.com/${rawHref}`;
+
+            items.push({
+              title: text,
+              slug,
+              officialUrl,
+              url: fullUrl,
+              category: "hot_update",
+              badge: text.toLowerCase().includes("result")
+                ? "Result"
+                : text.toLowerCase().includes("admit")
+                ? "Admit Card"
+                : "Apply Online",
+              colorClass: palette[hotIndex % palette.length],
+              matchedExamIds,
+            });
+            hotIndex++;
+          }
+        });
+      }
+
+      // 2. Parse Classic 3-Column Boards (Result, Admit Card, Latest Job) + Answer Key / Syllabus / Admission
+      // Match specific heading elements so outer wrapper tables don't swallow all 3 columns
+      $("#heading, .heading, h2, h3, th, b, strong").each((_, headingEl) => {
+        const hText = $(headingEl).text().replace(/\s+/g, " ").trim().toLowerCase();
+        if (!hText || hText.length > 40) return;
 
         let category: IPortalItem["category"] | null = null;
-        if (headerText.includes("result")) category = "result";
-        else if (headerText.includes("admit card") || headerText.includes("hall ticket")) category = "admit_card";
-        else if (headerText.includes("latest job") || headerText.includes("online form")) category = "latest_job";
+        if (hText === "result" || hText === "results") category = "result";
+        else if (hText === "admit card" || hText === "admit cards" || hText === "hall ticket") category = "admit_card";
+        else if (hText === "latest job" || hText === "latest jobs") category = "latest_job";
+        else if (hText === "answer key" || hText === "answer keys") category = "answer_key";
+        else if (hText === "syllabus") category = "syllabus";
+        else if (hText === "admission") category = "admission";
 
-        if (category) {
-          $(block)
-            .find("a")
-            .each((_, linkEl) => {
-              const text = $(linkEl).text().trim();
-              const rawHref = $(linkEl).attr("href")?.trim() || "";
-              if (text && text.length > 5 && !seenTitles.has(text.toLowerCase())) {
-                seenTitles.add(text.toLowerCase());
-                const officialUrl = resolveOfficialGovUrl(text, rawHref);
-                const matchedExamIds = matchExamPatternIds(text);
-                const slug = slugify(text);
+        if (!category) return;
 
-                let badge = "";
-                if (text.includes("Apply Online")) badge = "Apply Online";
-                else if (text.includes("Last Date")) badge = "Last Date";
-                else if (text.includes("Declared") || text.includes("Out")) badge = "Declared";
-
-                items.push({
-                  title: text,
-                  slug,
-                  officialUrl,
-                  url: rawHref.startsWith("http") ? rawHref : `https://www.sarkariresult.com${rawHref}`,
-                  category,
-                  badge: badge || undefined,
-                  matchedExamIds,
-                });
-              }
-            });
+        // Find the direct board box (either #box1/#box2/#box3, td, or parent div with a single #post/ul)
+        let box = $(headingEl).closest("#box1, #box2, #box3, td, .box");
+        if (box.length === 0) {
+          box = $(headingEl).parent();
         }
+        // Guard: skip if this container holds multiple column headings
+        if (box.find("#heading, .heading").length > 1) {
+          const nextPost = $(headingEl).next("#post, ul, div");
+          if (nextPost.length > 0) box = nextPost;
+          else return;
+        }
+
+        box.find("ul li a, #post a, li a, a").each((_, linkEl) => {
+          const text = $(linkEl).text().replace(/\s+/g, " ").trim();
+          const rawHref = $(linkEl).attr("href")?.trim() || "";
+          if (isNavOrNoise(text)) return;
+
+          const key = `${category}:${text.toLowerCase()}`;
+          if (!seenKeys.has(key)) {
+            seenKeys.add(key);
+            const officialUrl = resolveOfficialGovUrl(text, rawHref);
+            const matchedExamIds = matchExamPatternIds(text);
+            const slug = slugify(text);
+            const fullUrl = rawHref.startsWith("http")
+              ? rawHref
+              : rawHref.startsWith("/")
+              ? `https://www.sarkariresult.com${rawHref}`
+              : `https://www.sarkariresult.com/${rawHref}`;
+
+            let badge = "";
+            const lower = text.toLowerCase();
+            if (lower.includes("last date")) badge = "Last Date";
+            else if (lower.includes("apply online") || lower.includes("online form")) badge = "Online Form";
+            else if (lower.includes("declared") || lower.includes("out")) badge = "Out";
+            else if (lower.includes("exam city")) badge = "Exam City";
+            else if (lower.includes("score card") || lower.includes("scorecard")) badge = "Score Card";
+            else if (lower.includes("admit card")) badge = "Admit Card";
+
+            items.push({
+              title: text,
+              slug,
+              officialUrl,
+              url: fullUrl,
+              category,
+              badge: badge || undefined,
+              matchedExamIds,
+            });
+          }
+        });
       });
     }
   } catch (err: any) {
     console.warn("[Crawler] Live web fetch restricted/timed out, using verified official seed data:", err.message);
   }
 
-  // Ensure high quality seed items are incorporated if network returned sparse entries
-  if (items.length < 15) {
+  // Ensure complete board coverage if live site returned sparse entries
+  const resultCount = items.filter((i) => i.category === "result").length;
+  const admitCount = items.filter((i) => i.category === "admit_card").length;
+  const jobCount = items.filter((i) => i.category === "latest_job").length;
+  const hotCount = items.filter((i) => i.category === "hot_update").length;
+
+  if (hotCount < 4 || resultCount < 4 || admitCount < 4 || jobCount < 4) {
     for (const seed of FALLBACK_SEED_ITEMS) {
-      if (!seenTitles.has(seed.title.toLowerCase())) {
-        seenTitles.add(seed.title.toLowerCase());
+      const key = `${seed.category}:${seed.title.toLowerCase()}`;
+      if (!seenKeys.has(key)) {
+        seenKeys.add(key);
         items.push(seed);
       }
     }
@@ -973,9 +1182,36 @@ export async function getOrScrapePostDetail(slug: string, title?: string, rawUrl
     return inMemoryPostDetails.get(slug);
   }
 
-  // 2. Try scraping live page if URL provided or reconstructable
+  // 2. Resolve exact title & source URL from latest snapshot or seed items if not provided
+  let resolvedTitle = title;
+  let resolvedUrl = rawUrl;
+
+  if (!resolvedUrl || !resolvedTitle) {
+    let matchedItem: IPortalItem | undefined;
+    if (db) {
+      try {
+        const snap = await PortalSnapshot.findOne({ status: "published" }).sort({ versionNumber: -1 }).lean();
+        if (snap && Array.isArray(snap.items)) {
+          matchedItem = snap.items.find((it: any) => it.slug === slug);
+        }
+      } catch {}
+    } else if (inMemorySnapshots.length > 0) {
+      matchedItem = inMemorySnapshots[0].items.find((it) => it.slug === slug);
+    }
+
+    if (!matchedItem) {
+      matchedItem = FALLBACK_SEED_ITEMS.find((it) => it.slug === slug);
+    }
+
+    if (matchedItem) {
+      if (!resolvedTitle) resolvedTitle = matchedItem.title;
+      if (!resolvedUrl && matchedItem.url) resolvedUrl = matchedItem.url;
+    }
+  }
+
+  // 3. Try scraping live page if URL provided or reconstructable
   let scrapedData: any = null;
-  const targetUrl = rawUrl || `https://www.sarkariresult.com/${slug}/`;
+  const targetUrl = resolvedUrl || `https://www.sarkariresult.com/${slug}/`;
 
   try {
     const controller = new AbortController();
@@ -1101,7 +1337,7 @@ export async function getOrScrapePostDetail(slug: string, title?: string, rawUrl
   }
 
   // Fallback to high-fidelity structured parsed detail data
-  const finalDetail = scrapedData || buildParsedDetailData(slug, title, rawUrl);
+  const finalDetail = scrapedData || buildParsedDetailData(slug, resolvedTitle, resolvedUrl);
 
   // Cache in MongoDB or in-memory
   if (db) {

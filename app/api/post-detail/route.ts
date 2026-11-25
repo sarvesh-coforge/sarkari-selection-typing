@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getOrScrapePostDetail } from "@/lib/crawler";
+import { getOrScrapePostDetail } from "@/lib/scraper/sarkariCrawler";
 
 export const dynamic = "force-dynamic";
 

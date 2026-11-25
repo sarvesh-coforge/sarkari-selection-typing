@@ -55,31 +55,38 @@ interface IPortalItem {
   slug?: string;
   officialUrl: string;
   url?: string;
-  category: string;
   badge?: string;
-  colorClass?: string;
-  postDate?: string;
-  matchedExamIds?: string[];
+  bgColor?: string;
+}
+
+interface ISarkariCategories {
+  result: IPortalItem[];
+  admitCard: IPortalItem[];
+  latestJob: IPortalItem[];
+  answerKey: IPortalItem[];
+  syllabus: IPortalItem[];
+  admission: IPortalItem[];
+  certificate: IPortalItem[];
+  important: IPortalItem[];
+  outsourcing: IPortalItem[];
 }
 
 interface IVersionSummary {
-  versionNumber: number;
-  status: string;
-  fetchedAt: string;
-  itemCount: number;
+  version: number;
+  syncedAt: string;
+  isActive: boolean;
 }
 
 interface PortalDataResponse {
   success: boolean;
-  current: {
-    versionNumber: number;
-    sourceUrl?: string;
-    status: string;
-    fetchedAt: string;
-    items: IPortalItem[];
+  snapshot: {
+    version: number;
+    syncedAt: string;
+    isActive: boolean;
+    hotUpdates: IPortalItem[];
+    categories: ISarkariCategories;
   } | null;
   versions: IVersionSummary[];
-  autoSynced?: boolean;
 }
 
 const sampleParagraphs: Record<Language, string> = {
@@ -205,7 +212,9 @@ export default function RootTypingPortalPage() {
   const [examSearch, setExamSearch] = useState<string>("");
   const [examHistory, setExamHistory] = useState<ExamHistoryItem[]>([]);
   const [liveBoardSearch, setLiveBoardSearch] = useState<string>("");
-  const [liveBoardTab, setLiveBoardTab] = useState<"all" | "result" | "admit_card" | "latest_job">("all");
+  const [liveBoardTab, setLiveBoardTab] = useState<
+    "all" | "result" | "admitCard" | "latestJob" | "answerKey" | "syllabus" | "admission" | "certificate" | "important" | "outsourcing"
+  >("all");
 
   // Typing Tutor States
   const [tutorType, setTutorType] = useState<"english" | "krutidev" | "mangal">("english");
@@ -247,7 +256,7 @@ export default function RootTypingPortalPage() {
   // Fetch Live Portal Data from MongoDB
   const fetchPortalData = async () => {
     try {
-      const res = await fetch("/api/portal-data");
+      const res = await fetch("/api/sarkari-updates");
       const json = await res.json();
       if (json.success) {
         setPortalData(json);
@@ -260,14 +269,17 @@ export default function RootTypingPortalPage() {
   const handleManualSync = async () => {
     setIsSyncing(true);
     try {
-      const res = await fetch("/api/sync", { method: "POST" });
+      const res = await fetch("/api/sync-sarkari", { method: "POST" });
       const json = await res.json();
-      if (json.success) {
-        triggerToast(`Live Synced: v${json.version} auto-published (strictly 3 versions max retained in MongoDB)!`);
+      if (json.success && json.snapshot) {
+        triggerToast(`Live Synced: v${json.snapshot.version} published (strictly 3 versions retained in MongoDB)!`);
         await fetchPortalData();
+      } else {
+        triggerToast(json.error || "Sync failed — previous active snapshot preserved.");
       }
     } catch (err) {
       console.error("Manual sync error", err);
+      triggerToast("Network error during live sync.");
     } finally {
       setIsSyncing(false);
     }
@@ -341,27 +353,6 @@ export default function RootTypingPortalPage() {
     return isHindi ? e.minSpeedHindi || null : e.minSpeedEnglish || null;
   };
 
-  // Live Exam Matches: Map crawled live recruitments with real government URLs
-  const liveMatchedMap = useMemo(() => {
-    const map = new Map<string, { officialUrl: string; title: string; badge?: string }>();
-    if (!portalData?.current?.items) return map;
-
-    for (const item of portalData.current.items) {
-      if (item.matchedExamIds && item.matchedExamIds.length > 0) {
-        for (const examId of item.matchedExamIds) {
-          if (!map.has(examId)) {
-            map.set(examId, {
-              officialUrl: item.officialUrl,
-              title: item.title,
-              badge: item.badge || "Live 2026",
-            });
-          }
-        }
-      }
-    }
-    return map;
-  }, [portalData]);
-
   // Helper to resolve clean slug for linking to /post/[slug]
   const getItemSlug = (it: IPortalItem) => {
     if (it.slug) return it.slug;
@@ -373,38 +364,55 @@ export default function RootTypingPortalPage() {
   };
 
   const quickAccessHotUpdates = useMemo(() => {
-    if (!portalData?.current?.items) return [];
-    const h = portalData.current.items.filter((x) => x.category === "hot_update");
-    const base = h.length > 0 ? h : portalData.current.items;
+    const base = portalData?.snapshot?.hotUpdates || [];
     const q = liveBoardSearch.toLowerCase().trim();
     if (!q) return base.slice(0, 8);
     const filtered = base.filter((x) => x.title.toLowerCase().includes(q));
-    return filtered.length > 0 ? filtered.slice(0, 8) : base.slice(0, 8);
+    return filtered.slice(0, 8);
   }, [portalData, liveBoardSearch]);
 
-  const resultBoardItems = useMemo(() => {
-    if (!portalData?.current?.items) return [];
+  const filterCat = (arr?: IPortalItem[]) => {
+    if (!arr || !Array.isArray(arr)) return [];
     const q = liveBoardSearch.toLowerCase().trim();
-    return portalData.current.items
-      .filter((x) => x.category === "result")
-      .filter((x) => !q || x.title.toLowerCase().includes(q));
-  }, [portalData, liveBoardSearch]);
+    return q ? arr.filter((x) => x.title.toLowerCase().includes(q)) : arr;
+  };
 
-  const admitCardBoardItems = useMemo(() => {
-    if (!portalData?.current?.items) return [];
-    const q = liveBoardSearch.toLowerCase().trim();
-    return portalData.current.items
-      .filter((x) => x.category === "admit_card")
-      .filter((x) => !q || x.title.toLowerCase().includes(q));
-  }, [portalData, liveBoardSearch]);
+  const resultBoardItems = useMemo(() => filterCat(portalData?.snapshot?.categories?.result), [portalData, liveBoardSearch]);
+  const admitCardBoardItems = useMemo(() => filterCat(portalData?.snapshot?.categories?.admitCard), [portalData, liveBoardSearch]);
+  const latestJobBoardItems = useMemo(() => filterCat(portalData?.snapshot?.categories?.latestJob), [portalData, liveBoardSearch]);
+  const answerKeyBoardItems = useMemo(() => filterCat(portalData?.snapshot?.categories?.answerKey), [portalData, liveBoardSearch]);
+  const syllabusBoardItems = useMemo(() => filterCat(portalData?.snapshot?.categories?.syllabus), [portalData, liveBoardSearch]);
+  const admissionBoardItems = useMemo(() => filterCat(portalData?.snapshot?.categories?.admission), [portalData, liveBoardSearch]);
+  const certificateBoardItems = useMemo(() => filterCat(portalData?.snapshot?.categories?.certificate), [portalData, liveBoardSearch]);
+  const importantBoardItems = useMemo(() => filterCat(portalData?.snapshot?.categories?.important), [portalData, liveBoardSearch]);
+  const outsourcingBoardItems = useMemo(() => filterCat(portalData?.snapshot?.categories?.outsourcing), [portalData, liveBoardSearch]);
 
-  const latestJobBoardItems = useMemo(() => {
-    if (!portalData?.current?.items) return [];
-    const q = liveBoardSearch.toLowerCase().trim();
-    return portalData.current.items
-      .filter((x) => x.category === "latest_job")
-      .filter((x) => !q || x.title.toLowerCase().includes(q));
-  }, [portalData, liveBoardSearch]);
+  const allSnapshotItems = useMemo(() => {
+    const cats = portalData?.snapshot?.categories;
+    if (!cats) return portalData?.snapshot?.hotUpdates || [];
+    return [
+      ...(cats.latestJob || []),
+      ...(cats.admitCard || []),
+      ...(cats.result || []),
+      ...(cats.answerKey || []),
+      ...(cats.syllabus || []),
+      ...(cats.admission || []),
+      ...(cats.certificate || []),
+      ...(cats.important || []),
+      ...(cats.outsourcing || []),
+    ];
+  }, [portalData]);
+
+  const totalCategoryCount =
+    resultBoardItems.length +
+    admitCardBoardItems.length +
+    latestJobBoardItems.length +
+    answerKeyBoardItems.length +
+    syllabusBoardItems.length +
+    admissionBoardItems.length +
+    certificateBoardItems.length +
+    importantBoardItems.length +
+    outsourcingBoardItems.length;
 
   // Typing Test Stats Calculation
   const calculateTestStats = (): TestStats => {
@@ -641,7 +649,7 @@ export default function RootTypingPortalPage() {
     }
   };
 
-  const currentVersion = portalData?.current?.versionNumber ?? 1;
+  const currentVersion = portalData?.snapshot?.version ?? 1;
 
   return (
     <div className="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col justify-between">
@@ -1163,32 +1171,27 @@ export default function RootTypingPortalPage() {
               {portalData?.versions && portalData.versions.length > 0 ? (
                 portalData.versions.map((ver) => (
                   <div
-                    key={ver.versionNumber}
+                    key={ver.version}
                     className="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-white shadow-sm"
                   >
                     <div>
                       <div className="flex items-center space-x-2">
                         <span className="font-extrabold text-sm text-slate-900">
-                          v{ver.versionNumber}
+                          v{ver.version}
                         </span>
                         <span
                           className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                            ver.status === "published"
+                            ver.isActive
                               ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
                               : "bg-slate-100 text-slate-600"
                           }`}
                         >
-                          {ver.status}
+                          {ver.isActive ? "Active" : "Archived"}
                         </span>
                       </div>
                       <p className="text-[11px] text-slate-400 mt-0.5">
-                        {new Date(ver.fetchedAt).toLocaleString("en-IN")}
+                        {new Date(ver.syncedAt).toLocaleString("en-IN")}
                       </p>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-xs font-bold text-slate-700">
-                        {ver.itemCount} items
-                      </span>
                     </div>
                   </div>
                 ))
@@ -1821,15 +1824,15 @@ export default function RootTypingPortalPage() {
                   >
                     <span>All Boards</span>
                     <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-700 text-white">
-                      {resultBoardItems.length + admitCardBoardItems.length + latestJobBoardItems.length}
+                      {totalCategoryCount}
                     </span>
                   </button>
 
                   <button
                     type="button"
-                    onClick={() => setLiveBoardTab("latest_job")}
+                    onClick={() => setLiveBoardTab("latestJob")}
                     className={`px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
-                      liveBoardTab === "latest_job"
+                      liveBoardTab === "latestJob"
                         ? "bg-[#065f46] text-white shadow-sm"
                         : "bg-white text-emerald-900 hover:bg-emerald-50 border border-emerald-300"
                     }`}
@@ -1843,9 +1846,9 @@ export default function RootTypingPortalPage() {
 
                   <button
                     type="button"
-                    onClick={() => setLiveBoardTab("admit_card")}
+                    onClick={() => setLiveBoardTab("admitCard")}
                     className={`px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
-                      liveBoardTab === "admit_card"
+                      liveBoardTab === "admitCard"
                         ? "bg-[#1e3a8a] text-white shadow-sm"
                         : "bg-white text-blue-900 hover:bg-blue-50 border border-blue-300"
                     }`}
@@ -1872,79 +1875,114 @@ export default function RootTypingPortalPage() {
                       {resultBoardItems.length}
                     </span>
                   </button>
+
+                  {[
+                    { key: "answerKey" as const, label: "Answer Key", items: answerKeyBoardItems },
+                    { key: "syllabus" as const, label: "Syllabus", items: syllabusBoardItems },
+                    { key: "admission" as const, label: "Admission", items: admissionBoardItems },
+                    { key: "certificate" as const, label: "Certificate", items: certificateBoardItems },
+                    { key: "important" as const, label: "Important", items: importantBoardItems },
+                    { key: "outsourcing" as const, label: "Outsourcing", items: outsourcingBoardItems },
+                  ]
+                    .filter((cat) => cat.items.length > 0)
+                    .map((cat) => (
+                      <button
+                        key={cat.key}
+                        type="button"
+                        onClick={() => setLiveBoardTab(cat.key)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
+                          liveBoardTab === cat.key
+                            ? "bg-purple-800 text-white shadow-sm"
+                            : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-300"
+                        }`}
+                      >
+                        <span>{cat.label}</span>
+                        <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-700 text-white">
+                          {cat.items.length}
+                        </span>
+                      </button>
+                    ))}
                 </div>
               </div>
 
               {/* 8 Colored Quick Access Hot Updates Tiles */}
-              <div>
-                <div className="text-xs font-black text-slate-700 uppercase tracking-wider mb-3 flex items-center justify-between">
-                  <span className="flex items-center gap-1.5">
-                    <i className="fa-solid fa-fire text-amber-500"></i>
-                    <span>Quick Access Hot Updates (Top 8 Colored Boards)</span>
-                  </span>
-                  <span className="text-[11px] text-slate-400 font-normal">Click tile to view notification details</span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                  {quickAccessHotUpdates.map((item, idx) => {
-                    const slug = getItemSlug(item);
-                    return (
-                      <div
-                        key={idx}
-                        className={`rounded-xl p-3.5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between min-h-[110px] border border-black/10 hover-lift ${
-                          item.colorClass || "bg-red-700 text-white"
-                        }`}
-                      >
-                        <div className="space-y-1.5">
-                          {item.badge && (
-                            <span className="inline-block text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-black/30 text-white">
-                              {item.badge}
-                            </span>
-                          )}
-                          <Link
-                            href={`/post/${slug}`}
-                            className="font-black text-xs sm:text-[13px] leading-snug line-clamp-2 hover:underline block text-white"
-                            title={item.title}
-                          >
-                            {item.title}
-                          </Link>
-                        </div>
+              {quickAccessHotUpdates.length > 0 && (
+                <div>
+                  <div className="text-xs font-black text-slate-700 uppercase tracking-wider mb-3 flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <i className="fa-solid fa-fire text-amber-500"></i>
+                      <span>Quick Access Hot Updates (Top {quickAccessHotUpdates.length} Colored Boards)</span>
+                    </span>
+                    <span className="text-[11px] text-slate-400 font-normal">Click tile to view notification details</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    {quickAccessHotUpdates.map((item, idx) => {
+                      const slug = getItemSlug(item);
+                      const fallbackPalette = [
+                        "#dc2626",
+                        "#ea580c",
+                        "#c026d3",
+                        "#1d4ed8",
+                        "#65a30d",
+                        "#0284c7",
+                        "#7f1d1d",
+                        "#15803d",
+                      ];
+                      const tileColor = item.bgColor || fallbackPalette[idx % fallbackPalette.length];
+                      return (
+                        <div
+                          key={idx}
+                          style={{ backgroundColor: tileColor }}
+                          className="rounded-xl p-3.5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between min-h-[110px] border border-black/15 hover-lift text-white"
+                        >
+                          <div className="space-y-1.5">
+                            {item.badge && (
+                              <span className="inline-block text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-black/30 text-white">
+                                {item.badge}
+                              </span>
+                            )}
+                            <Link
+                              href={`/post/${slug}`}
+                              className="font-black text-xs sm:text-[13px] leading-snug line-clamp-2 hover:underline block text-white"
+                              title={item.title}
+                            >
+                              {item.title}
+                            </Link>
+                          </div>
 
-                        <div className="flex items-center justify-between gap-1.5 mt-3 pt-2 border-t border-white/20 text-[11px]">
-                          <Link
-                            href={`/post/${slug}`}
-                            className="font-black hover:underline inline-flex items-center gap-1 text-white opacity-95 hover:opacity-100"
-                          >
-                            <span>View Details</span>
-                            <span>&rarr;</span>
-                          </Link>
-                          <a
-                            href={item.officialUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="font-bold underline text-white/90 hover:text-white inline-flex items-center gap-1"
-                            title={`Direct official government link: ${item.officialUrl}`}
-                          >
-                            <span>Govt Portal</span>
-                            <i className="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
-                          </a>
+                          <div className="flex items-center justify-between gap-1.5 mt-3 pt-2 border-t border-white/25 text-[11px]">
+                            <Link
+                              href={`/post/${slug}`}
+                              className="font-black hover:underline inline-flex items-center gap-1 text-white opacity-95 hover:opacity-100"
+                            >
+                              <span>View Details</span>
+                              <span>&rarr;</span>
+                            </Link>
+                            <a
+                              href={item.officialUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-bold underline text-white/95 hover:text-white inline-flex items-center gap-1"
+                              title={`Direct official government link: ${item.officialUrl}`}
+                            >
+                              <span>Govt Portal</span>
+                              <i className="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                            </a>
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Classic Sarkari Result Recruitment Boards */}
-              <div>
-                <div className="text-xs font-black text-slate-700 uppercase tracking-wider mb-3 flex items-center justify-between">
+              <div className="space-y-6">
+                <div className="text-xs font-black text-slate-700 uppercase tracking-wider flex items-center justify-between">
                   <span>
                     {liveBoardTab === "all"
                       ? "Classic 3-Column Sarkari Recruitment Boards"
-                      : liveBoardTab === "result"
-                      ? "Official Results Board"
-                      : liveBoardTab === "admit_card"
-                      ? "Official Admit Cards Board"
-                      : "Official Latest Recruitment Jobs Board"}
+                      : `Official ${liveBoardTab.replace(/([A-Z])/g, " $1").trim()} Board`}
                   </span>
                   {liveBoardSearch && (
                     <span className="text-[11px] text-blue-600 font-bold">
@@ -1953,294 +1991,249 @@ export default function RootTypingPortalPage() {
                   )}
                 </div>
 
-                {/* 3-Column Layout when "all" is active */}
+                {/* 3-Column Layout + Secondary Categories when "all" is active */}
                 {liveBoardTab === "all" && (
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-                    {/* Column 1: Result (Maroon Header) */}
-                    <div className="flex flex-col border-2 border-red-900 rounded-xl overflow-hidden shadow-sm bg-white">
-                      <div className="bg-[#800000] text-white py-3 px-4 font-black text-sm uppercase tracking-wide flex items-center justify-between">
-                        <span className="flex items-center gap-2">
-                          <i className="fa-solid fa-square-poll-vertical"></i>
-                          <span>Result</span>
-                        </span>
-                        <span className="text-[10px] bg-red-950/70 px-2.5 py-0.5 rounded font-bold">
-                          {resultBoardItems.length} Available
-                        </span>
-                      </div>
-                      <div className="divide-y divide-slate-100 max-h-[540px] overflow-y-auto custom-scrollbar flex-1">
-                        {resultBoardItems.length > 0 ? (
-                          resultBoardItems.map((it, idx) => {
-                            const slug = getItemSlug(it);
-                            return (
-                              <div key={idx} className="p-3.5 hover:bg-amber-50/70 transition flex items-start gap-2.5 text-xs">
-                                <span className="text-red-700 font-black mt-0.5">&bull;</span>
-                                <div className="flex-1 min-w-0">
-                                  <Link
-                                    href={`/post/${slug}`}
-                                    className="font-bold text-blue-900 hover:text-blue-700 hover:underline leading-snug block line-clamp-2"
-                                    title="View authentic SarkariResult notification table"
-                                  >
-                                    {it.title}
-                                  </Link>
-                                  <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                                    {it.badge && (
-                                      <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-red-100 text-red-800 border border-red-200">
-                                        {it.badge}
-                                      </span>
-                                    )}
-                                    <Link
-                                      href={`/post/${slug}`}
-                                      className="text-[10px] font-bold text-blue-700 hover:underline inline-flex items-center gap-0.5"
-                                    >
-                                      <span>Details</span> &rarr;
-                                    </Link>
-                                    <a
-                                      href={it.officialUrl}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="text-[10px] font-bold text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded border border-emerald-200 ml-auto inline-flex items-center gap-1"
-                                      title={`Official government portal: ${it.officialUrl}`}
-                                    >
-                                      <span>Govt Portal</span>
-                                      <i className="fa-solid fa-arrow-up-right-from-square text-[8px]"></i>
-                                    </a>
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })
-                        ) : (
-                          <div className="p-8 text-center text-xs text-slate-400">
-                            {liveBoardSearch ? "No results match your search." : "Loading latest results..."}
+                  <>
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                      {[
+                        {
+                          title: "Result",
+                          icon: "fa-square-poll-vertical",
+                          items: resultBoardItems,
+                          border: "border-red-900",
+                          headerBg: "bg-[#800000]",
+                          badgeBg: "bg-red-950/70",
+                          dotColor: "text-red-700",
+                          tagClass: "bg-red-100 text-red-800 border-red-200",
+                          hoverClass: "hover:bg-amber-50/70",
+                        },
+                        {
+                          title: "Admit Card",
+                          icon: "fa-id-card",
+                          items: admitCardBoardItems,
+                          border: "border-blue-900",
+                          headerBg: "bg-[#1e3a8a]",
+                          badgeBg: "bg-blue-950/70",
+                          dotColor: "text-blue-700",
+                          tagClass: "bg-blue-100 text-blue-800 border-blue-200",
+                          hoverClass: "hover:bg-blue-50/50",
+                        },
+                        {
+                          title: "Latest Job",
+                          icon: "fa-briefcase",
+                          items: latestJobBoardItems,
+                          border: "border-emerald-900",
+                          headerBg: "bg-[#065f46]",
+                          badgeBg: "bg-emerald-950/70",
+                          dotColor: "text-emerald-700",
+                          tagClass: "bg-emerald-100 text-emerald-800 border-emerald-200",
+                          hoverClass: "hover:bg-emerald-50/50",
+                        },
+                      ].map((col) => (
+                        <div key={col.title} className={`flex flex-col border-2 ${col.border} rounded-xl overflow-hidden shadow-sm bg-white`}>
+                          <div className={`${col.headerBg} text-white py-3 px-4 font-black text-sm uppercase tracking-wide flex items-center justify-between`}>
+                            <span className="flex items-center gap-2">
+                              <i className={`fa-solid ${col.icon}`}></i>
+                              <span>{col.title}</span>
+                            </span>
+                            <span className={`text-[10px] ${col.badgeBg} px-2.5 py-0.5 rounded font-bold`}>
+                              {col.items.length} Available
+                            </span>
                           </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Column 2: Admit Card (Blue Header) */}
-                    <div className="flex flex-col border-2 border-blue-900 rounded-xl overflow-hidden shadow-sm bg-white">
-                      <div className="bg-[#1e3a8a] text-white py-3 px-4 font-black text-sm uppercase tracking-wide flex items-center justify-between">
-                        <span className="flex items-center gap-2">
-                          <i className="fa-solid fa-id-card"></i>
-                          <span>Admit Card</span>
-                        </span>
-                        <span className="text-[10px] bg-blue-950/70 px-2.5 py-0.5 rounded font-bold">
-                          {admitCardBoardItems.length} Available
-                        </span>
-                      </div>
-                      <div className="divide-y divide-slate-100 max-h-[540px] overflow-y-auto custom-scrollbar flex-1">
-                        {admitCardBoardItems.length > 0 ? (
-                          admitCardBoardItems.map((it, idx) => {
-                            const slug = getItemSlug(it);
-                            return (
-                              <div key={idx} className="p-3.5 hover:bg-blue-50/50 transition flex items-start gap-2.5 text-xs">
-                                <span className="text-blue-700 font-black mt-0.5">&bull;</span>
-                                <div className="flex-1 min-w-0">
-                                  <Link
-                                    href={`/post/${slug}`}
-                                    className="font-bold text-blue-900 hover:text-blue-700 hover:underline leading-snug block line-clamp-2"
-                                    title="View authentic SarkariResult notification table"
-                                  >
-                                    {it.title}
-                                  </Link>
-                                  <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                                    {it.badge && (
-                                      <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 border border-blue-200">
-                                        {it.badge}
-                                      </span>
-                                    )}
-                                    <Link
-                                      href={`/post/${slug}`}
-                                      className="text-[10px] font-bold text-blue-700 hover:underline inline-flex items-center gap-0.5"
-                                    >
-                                      <span>Details</span> &rarr;
-                                    </Link>
-                                    <a
-                                      href={it.officialUrl}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="text-[10px] font-bold text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded border border-emerald-200 ml-auto inline-flex items-center gap-1"
-                                      title={`Official government portal: ${it.officialUrl}`}
-                                    >
-                                      <span>Govt Portal</span>
-                                      <i className="fa-solid fa-arrow-up-right-from-square text-[8px]"></i>
-                                    </a>
+                          <div className="divide-y divide-slate-100 max-h-[560px] overflow-y-auto custom-scrollbar flex-1">
+                            {col.items.length > 0 ? (
+                              col.items.map((it, idx) => {
+                                const slug = getItemSlug(it);
+                                return (
+                                  <div key={idx} className={`p-3.5 ${col.hoverClass} transition flex items-start gap-2.5 text-xs`}>
+                                    <span className={`${col.dotColor} font-black mt-0.5`}>&bull;</span>
+                                    <div className="flex-1 min-w-0">
+                                      <Link
+                                        href={`/post/${slug}`}
+                                        className="font-bold text-blue-900 hover:text-blue-700 hover:underline leading-snug block line-clamp-2"
+                                        title="View authentic SarkariResult notification table"
+                                      >
+                                        {it.title}
+                                      </Link>
+                                      <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                                        {it.badge && (
+                                          <span className={`text-[9px] font-black px-1.5 py-0.5 rounded border ${col.tagClass}`}>
+                                            {it.badge}
+                                          </span>
+                                        )}
+                                        <Link
+                                          href={`/post/${slug}`}
+                                          className="text-[10px] font-bold text-blue-700 hover:underline inline-flex items-center gap-0.5"
+                                        >
+                                          <span>Details</span> &rarr;
+                                        </Link>
+                                        <a
+                                          href={it.officialUrl}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="text-[10px] font-bold text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded border border-emerald-200 ml-auto inline-flex items-center gap-1"
+                                          title={`Official government portal: ${it.officialUrl}`}
+                                        >
+                                          <span>Govt Portal</span>
+                                          <i className="fa-solid fa-arrow-up-right-from-square text-[8px]"></i>
+                                        </a>
+                                      </div>
+                                    </div>
                                   </div>
-                                </div>
+                                );
+                              })
+                            ) : (
+                              <div className="p-8 text-center text-xs text-slate-400">
+                                {liveBoardSearch ? `No ${col.title.toLowerCase()} items match your search.` : `Syncing ${col.title.toLowerCase()}...`}
                               </div>
-                            );
-                          })
-                        ) : (
-                          <div className="p-8 text-center text-xs text-slate-400">
-                            {liveBoardSearch ? "No admit cards match your search." : "Loading admit cards..."}
+                            )}
                           </div>
-                        )}
-                      </div>
+                        </div>
+                      ))}
                     </div>
 
-                    {/* Column 3: Latest Job (Emerald Header) */}
-                    <div className="flex flex-col border-2 border-emerald-900 rounded-xl overflow-hidden shadow-sm bg-white">
-                      <div className="bg-[#065f46] text-white py-3 px-4 font-black text-sm uppercase tracking-wide flex items-center justify-between">
-                        <span className="flex items-center gap-2">
-                          <i className="fa-solid fa-briefcase"></i>
-                          <span>Latest Job</span>
-                        </span>
-                        <span className="text-[10px] bg-emerald-950/70 px-2.5 py-0.5 rounded font-bold">
-                          {latestJobBoardItems.length} Available
-                        </span>
-                      </div>
-                      <div className="divide-y divide-slate-100 max-h-[540px] overflow-y-auto custom-scrollbar flex-1">
-                        {latestJobBoardItems.length > 0 ? (
-                          latestJobBoardItems.map((it, idx) => {
-                            const slug = getItemSlug(it);
-                            return (
-                              <div key={idx} className="p-3.5 hover:bg-emerald-50/50 transition flex items-start gap-2.5 text-xs">
-                                <span className="text-emerald-700 font-black mt-0.5">&bull;</span>
-                                <div className="flex-1 min-w-0">
-                                  <Link
-                                    href={`/post/${slug}`}
-                                    className="font-bold text-blue-900 hover:text-blue-700 hover:underline leading-snug block line-clamp-2"
-                                    title="View authentic SarkariResult notification table"
-                                  >
-                                    {it.title}
-                                  </Link>
-                                  <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                                    {it.badge && (
-                                      <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200">
-                                        {it.badge}
-                                      </span>
-                                    )}
-                                    <Link
-                                      href={`/post/${slug}`}
-                                      className="text-[10px] font-bold text-blue-700 hover:underline inline-flex items-center gap-0.5"
-                                    >
-                                      <span>Details</span> &rarr;
-                                    </Link>
-                                    <a
-                                      href={it.officialUrl}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="text-[10px] font-bold text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded border border-emerald-200 ml-auto inline-flex items-center gap-1"
-                                      title={`Official government portal: ${it.officialUrl}`}
-                                    >
-                                      <span>Govt Portal</span>
-                                      <i className="fa-solid fa-arrow-up-right-from-square text-[8px]"></i>
-                                    </a>
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })
-                        ) : (
-                          <div className="p-8 text-center text-xs text-slate-400">
-                            {liveBoardSearch ? "No jobs match your search." : "Loading latest jobs..."}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Filtered Single Board View (Result, Admit Card, or Latest Job) */}
-                {liveBoardTab !== "all" && (
-                  <div className="border-2 border-slate-300 rounded-xl overflow-hidden shadow-sm bg-white">
-                    <div
-                      className={`text-white py-3 px-5 font-black text-sm uppercase tracking-wide flex items-center justify-between ${
-                        liveBoardTab === "result"
-                          ? "bg-[#800000]"
-                          : liveBoardTab === "admit_card"
-                          ? "bg-[#1e3a8a]"
-                          : "bg-[#065f46]"
-                      }`}
-                    >
-                      <span className="flex items-center gap-2">
-                        <i
-                          className={`fa-solid ${
-                            liveBoardTab === "result"
-                              ? "fa-square-poll-vertical"
-                              : liveBoardTab === "admit_card"
-                              ? "fa-id-card"
-                              : "fa-briefcase"
-                          }`}
-                        ></i>
-                        <span>
-                          {liveBoardTab === "result"
-                            ? "All Results"
-                            : liveBoardTab === "admit_card"
-                            ? "All Admit Cards"
-                            : "All Latest Recruitment Jobs"}
-                        </span>
-                      </span>
-                      <span className="text-[10px] bg-black/40 px-2.5 py-0.5 rounded-full font-bold">
-                        {(liveBoardTab === "result"
-                          ? resultBoardItems
-                          : liveBoardTab === "admit_card"
-                          ? admitCardBoardItems
-                          : latestJobBoardItems
-                        ).length}{" "}
-                        Entries
-                      </span>
-                    </div>
-
-                    <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[600px] overflow-y-auto custom-scrollbar">
-                      {(liveBoardTab === "result"
-                        ? resultBoardItems
-                        : liveBoardTab === "admit_card"
-                        ? admitCardBoardItems
-                        : latestJobBoardItems
-                      ).map((it, idx) => {
-                        const slug = getItemSlug(it);
-                        return (
-                          <div
-                            key={idx}
-                            className="p-3.5 rounded-xl border border-slate-200 hover:border-slate-400 hover:shadow-sm bg-slate-50/60 hover:bg-white transition flex flex-col justify-between space-y-3"
-                          >
-                            <div>
-                              <div className="flex items-center justify-between gap-1.5 mb-1.5">
-                                <span
-                                  className={`text-[9px] font-black uppercase px-2 py-0.5 rounded ${
-                                    liveBoardTab === "result"
-                                      ? "bg-red-100 text-red-800"
-                                      : liveBoardTab === "admit_card"
-                                      ? "bg-blue-100 text-blue-800"
-                                      : "bg-emerald-100 text-emerald-800"
-                                  }`}
-                                >
-                                  {it.badge || "ACTIVE 2026"}
+                    {/* Additional Populated Category Boards (Answer Key, Syllabus, Admission, Certificate, Important, Outsourcing) */}
+                    {[
+                      { title: "Answer Key", items: answerKeyBoardItems, icon: "fa-key" },
+                      { title: "Syllabus", items: syllabusBoardItems, icon: "fa-book-open" },
+                      { title: "Admission", items: admissionBoardItems, icon: "fa-user-graduate" },
+                      { title: "Certificate Verification", items: certificateBoardItems, icon: "fa-certificate" },
+                      { title: "Important", items: importantBoardItems, icon: "fa-star" },
+                      { title: "Outsourcing / Offline Jobs", items: outsourcingBoardItems, icon: "fa-file-signature" },
+                    ].filter((sec) => sec.items.length > 0).length > 0 && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 pt-2">
+                        {[
+                          { title: "Answer Key", items: answerKeyBoardItems, icon: "fa-key" },
+                          { title: "Syllabus", items: syllabusBoardItems, icon: "fa-book-open" },
+                          { title: "Admission", items: admissionBoardItems, icon: "fa-user-graduate" },
+                          { title: "Certificate Verification", items: certificateBoardItems, icon: "fa-certificate" },
+                          { title: "Important", items: importantBoardItems, icon: "fa-star" },
+                          { title: "Outsourcing / Offline Jobs", items: outsourcingBoardItems, icon: "fa-file-signature" },
+                        ]
+                          .filter((sec) => sec.items.length > 0)
+                          .map((sec) => (
+                            <div key={sec.title} className="flex flex-col border-2 border-slate-700 rounded-xl overflow-hidden shadow-sm bg-white">
+                              <div className="bg-slate-800 text-white py-2.5 px-4 font-black text-xs sm:text-sm uppercase tracking-wide flex items-center justify-between">
+                                <span className="flex items-center gap-2">
+                                  <i className={`fa-solid ${sec.icon}`}></i>
+                                  <span>{sec.title}</span>
+                                </span>
+                                <span className="text-[10px] bg-slate-950/60 px-2 py-0.5 rounded font-bold">
+                                  {sec.items.length} Available
                                 </span>
                               </div>
-                              <Link
-                                href={`/post/${slug}`}
-                                className="font-bold text-xs sm:text-sm text-blue-900 hover:text-blue-700 hover:underline leading-snug line-clamp-3 block"
-                              >
-                                {it.title}
-                              </Link>
+                              <div className="divide-y divide-slate-100 max-h-[380px] overflow-y-auto custom-scrollbar flex-1">
+                                {sec.items.map((it, idx) => {
+                                  const slug = getItemSlug(it);
+                                  return (
+                                    <div key={idx} className="p-3 hover:bg-slate-50 transition flex items-start gap-2 text-xs">
+                                      <span className="text-slate-600 font-black mt-0.5">&bull;</span>
+                                      <div className="flex-1 min-w-0">
+                                        <Link
+                                          href={`/post/${slug}`}
+                                          className="font-bold text-blue-900 hover:text-blue-700 hover:underline leading-snug block line-clamp-2"
+                                        >
+                                          {it.title}
+                                        </Link>
+                                        <div className="flex items-center gap-1.5 mt-1.5">
+                                          <Link
+                                            href={`/post/${slug}`}
+                                            className="text-[10px] font-bold text-blue-700 hover:underline"
+                                          >
+                                            Details &rarr;
+                                          </Link>
+                                          <a
+                                            href={it.officialUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-[10px] font-bold text-emerald-700 hover:text-emerald-900 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 ml-auto inline-flex items-center gap-1"
+                                          >
+                                            <span>Govt Portal</span>
+                                            <i className="fa-solid fa-arrow-up-right-from-square text-[8px]"></i>
+                                          </a>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
                             </div>
-
-                            <div className="flex items-center justify-between pt-2 border-t border-slate-200 text-xs">
-                              <Link
-                                href={`/post/${slug}`}
-                                className="font-bold text-blue-700 hover:underline inline-flex items-center gap-1"
-                              >
-                                <span>Details Table</span> &rarr;
-                              </Link>
-                              <a
-                                href={it.officialUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="font-bold text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 px-2 py-1 rounded border border-emerald-200 inline-flex items-center gap-1"
-                                title={`Direct link to government portal: ${it.officialUrl}`}
-                              >
-                                <span>Govt Portal</span>
-                                <i className="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
-                              </a>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
+                          ))}
+                      </div>
+                    )}
+                  </>
                 )}
+
+                {/* Filtered Single Board View */}
+                {liveBoardTab !== "all" && (() => {
+                  const categoryMap: Record<string, { title: string; items: IPortalItem[]; headerBg: string; tagClass: string }> = {
+                    result: { title: "All Results", items: resultBoardItems, headerBg: "bg-[#800000]", tagClass: "bg-red-100 text-red-800" },
+                    admitCard: { title: "All Admit Cards", items: admitCardBoardItems, headerBg: "bg-[#1e3a8a]", tagClass: "bg-blue-100 text-blue-800" },
+                    latestJob: { title: "All Latest Recruitment Jobs", items: latestJobBoardItems, headerBg: "bg-[#065f46]", tagClass: "bg-emerald-100 text-emerald-800" },
+                    answerKey: { title: "Answer Keys", items: answerKeyBoardItems, headerBg: "bg-purple-800", tagClass: "bg-purple-100 text-purple-800" },
+                    syllabus: { title: "Syllabus", items: syllabusBoardItems, headerBg: "bg-purple-800", tagClass: "bg-purple-100 text-purple-800" },
+                    admission: { title: "Admissions", items: admissionBoardItems, headerBg: "bg-purple-800", tagClass: "bg-purple-100 text-purple-800" },
+                    certificate: { title: "Certificate Verification", items: certificateBoardItems, headerBg: "bg-purple-800", tagClass: "bg-purple-100 text-purple-800" },
+                    important: { title: "Important", items: importantBoardItems, headerBg: "bg-purple-800", tagClass: "bg-purple-100 text-purple-800" },
+                    outsourcing: { title: "Outsourcing / Offline Jobs", items: outsourcingBoardItems, headerBg: "bg-purple-800", tagClass: "bg-purple-100 text-purple-800" },
+                  };
+                  const currentCat = categoryMap[liveBoardTab] || categoryMap.latestJob;
+                  return (
+                    <div className="border-2 border-slate-300 rounded-xl overflow-hidden shadow-sm bg-white">
+                      <div className={`${currentCat.headerBg} text-white py-3 px-5 font-black text-sm uppercase tracking-wide flex items-center justify-between`}>
+                        <span>{currentCat.title}</span>
+                        <span className="text-[10px] bg-black/40 px-2.5 py-0.5 rounded-full font-bold">
+                          {currentCat.items.length} Entries
+                        </span>
+                      </div>
+
+                      <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[600px] overflow-y-auto custom-scrollbar">
+                        {currentCat.items.map((it, idx) => {
+                          const slug = getItemSlug(it);
+                          return (
+                            <div
+                              key={idx}
+                              className="p-3.5 rounded-xl border border-slate-200 hover:border-slate-400 hover:shadow-sm bg-slate-50/60 hover:bg-white transition flex flex-col justify-between space-y-3"
+                            >
+                              <div>
+                                <div className="flex items-center justify-between gap-1.5 mb-1.5">
+                                  <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded ${currentCat.tagClass}`}>
+                                    {it.badge || "LIVE 2026"}
+                                  </span>
+                                </div>
+                                <Link
+                                  href={`/post/${slug}`}
+                                  className="font-bold text-xs sm:text-sm text-blue-900 hover:text-blue-700 hover:underline leading-snug line-clamp-3 block"
+                                >
+                                  {it.title}
+                                </Link>
+                              </div>
+
+                              <div className="flex items-center justify-between pt-2 border-t border-slate-200 text-xs">
+                                <Link
+                                  href={`/post/${slug}`}
+                                  className="font-bold text-blue-700 hover:underline inline-flex items-center gap-1"
+                                >
+                                  <span>Details Table</span> &rarr;
+                                </Link>
+                                <a
+                                  href={it.officialUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="font-bold text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 px-2 py-1 rounded border border-emerald-200 inline-flex items-center gap-1"
+                                  title={`Direct link to government portal: ${it.officialUrl}`}
+                                >
+                                  <span>Govt Portal</span>
+                                  <i className="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                                </a>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           </section>
@@ -2565,7 +2558,7 @@ export default function RootTypingPortalPage() {
               </div>
 
               {/* Live Official Government Recruitment Feeds */}
-              {portalData?.current?.items && portalData.current.items.length > 0 && (
+              {allSnapshotItems.length > 0 && (
                 <div className="p-5 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 space-y-3">
                   <div className="flex items-center justify-between">
                     <h3 className="font-extrabold text-slate-900 text-base flex items-center gap-2">
@@ -2577,7 +2570,7 @@ export default function RootTypingPortalPage() {
                     </span>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                    {portalData.current.items.slice(0, 8).map((it, idx) => (
+                    {allSnapshotItems.slice(0, 8).map((it, idx) => (
                       <a
                         key={idx}
                         href={it.officialUrl}

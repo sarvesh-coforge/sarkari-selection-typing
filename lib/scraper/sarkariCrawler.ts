@@ -447,15 +447,33 @@ export async function scrapeSarkariResultLive(): Promise<LiveCrawlPayload> {
   return { hotUpdates, categories };
 }
 
+interface InMemorySnapshot {
+  version: number;
+  syncedAt: Date;
+  isActive: boolean;
+  hotUpdates: ISarkariPostItem[];
+  categories: ISarkariCategories;
+}
+
+// Ephemeral in-memory 3-version rolling cache used ONLY if MongoDB is unreachable.
+// Contains zero static/hardcoded data — populated exclusively from live crawls.
+let inMemorySnapshots: InMemorySnapshot[] = [];
+const inMemoryPostDetails = new Map<string, any>();
+
 /**
- * Searches the active MongoDB snapshot for a post matching `slug` so we always
- * know its exact live SarkariResult detail URL and title.
+ * Searches the active snapshot (MongoDB or in-memory live cache) for a post matching `slug`
+ * so we always know its exact live SarkariResult detail URL and title.
  */
 async function findPostInActiveSnapshot(slug: string): Promise<ISarkariPostItem | null> {
   const db = await connectToDatabase();
-  if (!db) return null;
+  let active: any = null;
 
-  const active = await SarkariSnapshot.findOne({ isActive: true }).sort({ version: -1 }).lean();
+  if (db) {
+    active = await SarkariSnapshot.findOne({ isActive: true }).sort({ version: -1 }).lean();
+  } else {
+    active = inMemorySnapshots.find((s) => s.isActive) || inMemorySnapshots[0] || null;
+  }
+
   if (!active) return null;
 
   const allLists: ISarkariPostItem[][] = [
@@ -480,7 +498,7 @@ async function findPostInActiveSnapshot(slug: string): Promise<ISarkariPostItem 
 
 /**
  * On-Demand Detail Page Scraper:
- * Fetches the specific post's live sarkariresult.com URL (or serves MongoDB cache)
+ * Fetches the specific post's live sarkariresult.com URL (or serves MongoDB/memory cache)
  * and parses Important Dates, Fee, Age Limit, Vacancy Details, and Official Govt Links.
  */
 export async function getOrScrapePostDetail(slug: string, passedTitle?: string, passedUrl?: string) {
@@ -491,6 +509,8 @@ export async function getOrScrapePostDetail(slug: string, passedTitle?: string, 
     if (cached) {
       return cached;
     }
+  } else if (inMemoryPostDetails.has(slug)) {
+    return inMemoryPostDetails.get(slug);
   }
 
   const snapshotMatch = await findPostInActiveSnapshot(slug);
@@ -716,6 +736,8 @@ export async function getOrScrapePostDetail(slug: string, passedTitle?: string, 
 
   if (db) {
     await PostDetail.findOneAndUpdate({ slug }, parsedDetail, { upsert: true, new: true });
+  } else {
+    inMemoryPostDetails.set(slug, parsedDetail);
   }
 
   return parsedDetail;
@@ -723,14 +745,11 @@ export async function getOrScrapePostDetail(slug: string, passedTitle?: string, 
 
 /**
  * Executes a live SarkariResult crawl, validates core categories, saves as active
- * version in MongoDB, and enforces the strict 3-version rolling retention policy.
+ * version in MongoDB (or live 3-version memory store if DB is offline), and enforces
+ * the strict 3-version rolling retention policy.
  */
 export async function runRollingSarkariSync() {
   const db = await connectToDatabase();
-  if (!db) {
-    throw new Error("MongoDB connection unavailable. Cannot persist SarkariResult snapshot.");
-  }
-
   const { hotUpdates, categories } = await scrapeSarkariResultLive();
 
   if (
@@ -743,24 +762,74 @@ export async function runRollingSarkariSync() {
     );
   }
 
-  const latest = await SarkariSnapshot.findOne().sort({ version: -1 }).select("version").lean();
-  const nextVersion = latest && typeof latest.version === "number" ? latest.version + 1 : 1;
+  if (db) {
+    const latest = await SarkariSnapshot.findOne().sort({ version: -1 }).select("version").lean();
+    const nextVersion = latest && typeof latest.version === "number" ? latest.version + 1 : 1;
 
-  await SarkariSnapshot.updateMany({ isActive: true }, { $set: { isActive: false } });
+    await SarkariSnapshot.updateMany({ isActive: true }, { $set: { isActive: false } });
 
-  const created = await SarkariSnapshot.create({
+    const created = await SarkariSnapshot.create({
+      version: nextVersion,
+      syncedAt: new Date(),
+      isActive: true,
+      hotUpdates,
+      categories,
+    });
+
+    const allVersions = await SarkariSnapshot.find().sort({ version: -1 }).select("_id version").lean();
+    if (allVersions.length > 3) {
+      const idsToDelete = allVersions.slice(3).map((doc) => doc._id);
+      await SarkariSnapshot.deleteMany({ _id: { $in: idsToDelete } });
+    }
+
+    return created.toObject();
+  }
+
+  // Live in-memory 3-version rolling fallback when MongoDB is not configured
+  const nextVersion = inMemorySnapshots.length > 0 ? inMemorySnapshots[0].version + 1 : 1;
+  inMemorySnapshots = inMemorySnapshots.map((s) => ({ ...s, isActive: false }));
+
+  const newSnap: InMemorySnapshot = {
     version: nextVersion,
     syncedAt: new Date(),
     isActive: true,
     hotUpdates,
     categories,
-  });
+  };
 
-  const allVersions = await SarkariSnapshot.find().sort({ version: -1 }).select("_id version").lean();
-  if (allVersions.length > 3) {
-    const idsToDelete = allVersions.slice(3).map((doc) => doc._id);
-    await SarkariSnapshot.deleteMany({ _id: { $in: idsToDelete } });
+  inMemorySnapshots = [newSnap, ...inMemorySnapshots].slice(0, 3);
+  return newSnap;
+}
+
+/**
+ * Fetches the active snapshot from MongoDB (or live-crawls on demand).
+ */
+export async function getActiveSarkariSnapshot() {
+  const db = await connectToDatabase();
+
+  if (db) {
+    let snapshot: any = await SarkariSnapshot.findOne({ isActive: true }).sort({ version: -1 }).lean();
+    if (!snapshot) {
+      snapshot = await runRollingSarkariSync();
+    }
+    const versions = await SarkariSnapshot.find()
+      .sort({ version: -1 })
+      .limit(3)
+      .select("version syncedAt isActive")
+      .lean();
+
+    return { snapshot, versions };
   }
 
-  return created.toObject();
+  let snapshot = inMemorySnapshots.find((s) => s.isActive) || inMemorySnapshots[0];
+  if (!snapshot) {
+    snapshot = await runRollingSarkariSync();
+  }
+  const versions = inMemorySnapshots.map((s) => ({
+    version: s.version,
+    syncedAt: s.syncedAt,
+    isActive: s.isActive,
+  }));
+
+  return { snapshot, versions };
 }

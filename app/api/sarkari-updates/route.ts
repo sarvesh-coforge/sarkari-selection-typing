@@ -1,35 +1,11 @@
 import { NextResponse } from "next/server";
-import connectToDatabase from "@/lib/mongodb";
-import SarkariSnapshot from "@/models/SarkariSnapshot";
-import { runRollingSarkariSync } from "@/lib/scraper/sarkariCrawler";
+import { getActiveSarkariSnapshot } from "@/lib/scraper/sarkariCrawler";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const db = await connectToDatabase();
-    if (!db) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "MongoDB connection unavailable.",
-        },
-        { status: 503 }
-      );
-    }
-
-    let snapshot: any = await SarkariSnapshot.findOne({ isActive: true }).sort({ version: -1 }).lean();
-
-    if (!snapshot) {
-      snapshot = await runRollingSarkariSync();
-    }
-
-    const versions = await SarkariSnapshot.find()
-      .sort({ version: -1 })
-      .limit(3)
-      .select("version syncedAt isActive")
-      .lean();
-
+    const { snapshot, versions } = await getActiveSarkariSnapshot();
     return NextResponse.json({
       success: true,
       snapshot,
@@ -40,7 +16,7 @@ export async function GET() {
     return NextResponse.json(
       {
         success: false,
-        error: error?.message || "Failed to load active SarkariResult snapshot from MongoDB",
+        error: error?.message || "Failed to load live SarkariResult updates",
       },
       { status: 500 }
     );

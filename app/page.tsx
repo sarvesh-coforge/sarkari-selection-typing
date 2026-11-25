@@ -168,6 +168,7 @@ export default function RootTypingPortalPage() {
   // Live Portal DB Data
   const [portalData, setPortalData] = useState<PortalDataResponse | null>(null);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
   const [showVersionModal, setShowVersionModal] = useState<boolean>(false);
 
   // Mobile menu
@@ -260,14 +261,19 @@ export default function RootTypingPortalPage() {
       const json = await res.json();
       if (json.success) {
         setPortalData(json);
+        setSyncError(null);
+      } else if (json.error) {
+        setSyncError(json.error);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.warn("Portal data live load failed", err);
+      setSyncError(err?.message || "Failed to connect to /api/sarkari-updates");
     }
   };
 
   const handleManualSync = async () => {
     setIsSyncing(true);
+    setSyncError(null);
     try {
       const res = await fetch("/api/sync-sarkari", { method: "POST" });
       const json = await res.json();
@@ -275,10 +281,13 @@ export default function RootTypingPortalPage() {
         triggerToast(`Live Synced: v${json.snapshot.version} published (strictly 3 versions retained in MongoDB)!`);
         await fetchPortalData();
       } else {
-        triggerToast(json.error || "Sync failed — previous active snapshot preserved.");
+        const msg = json.error || "Sync failed — previous active snapshot preserved.";
+        setSyncError(msg);
+        triggerToast(msg);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Manual sync error", err);
+      setSyncError(err?.message || "Network error during live sync.");
       triggerToast("Network error during live sync.");
     } finally {
       setIsSyncing(false);
@@ -1786,6 +1795,26 @@ export default function RootTypingPortalPage() {
                   </button>
                 </div>
               </div>
+
+              {/* Sync Error Alert (if MongoDB or Live Crawl fails) */}
+              {syncError && (
+                <div className="bg-red-50 border border-red-300 text-red-900 rounded-xl p-3.5 text-xs sm:text-sm flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-2.5">
+                    <i className="fa-solid fa-triangle-exclamation text-red-600 mt-0.5"></i>
+                    <div>
+                      <strong className="font-bold block">Sync Notice:</strong>
+                      <span className="text-red-800">{syncError}</span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSyncError(null)}
+                    className="text-red-500 hover:text-red-700 font-bold"
+                  >
+                    <i className="fa-solid fa-xmark"></i>
+                  </button>
+                </div>
+              )}
 
               {/* Interactive Search & Board Filter Bar */}
               <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200">

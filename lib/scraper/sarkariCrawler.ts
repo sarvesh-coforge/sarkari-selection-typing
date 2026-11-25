@@ -369,37 +369,62 @@ export async function scrapeSarkariResultLive(): Promise<LiveCrawlPayload> {
     outsourcing: new Set(),
   };
 
-  $("#heading, .heading, h2, h3, th, div").each((_, headingEl) => {
-    // Only inspect leaf-like heading elements so outer wrapper divs never match
-    const childrenCount = $(headingEl).children().length;
-    if (childrenCount > 2) return;
+  $("#heading, .heading, h1, h2, h3, h4, th, td, div, b, strong, font, span, a").each((_, headingEl) => {
+    // Must not contain any <ul>/<ol> list inside the heading element itself
+    if ($(headingEl).find("ul, ol").length > 0) return;
 
     const headingText = $(headingEl).text().replace(/\s+/g, " ").trim();
     const catKey = matchCategoryKey(headingText);
     if (!catKey) return;
 
-    // Locate the exact list container belonging exclusively to this heading
-    let linkNodes = $(headingEl).next("#post, ul, div").find("ul li a, li a");
-
-    if (linkNodes.length === 0) {
-      const parentBox = $(headingEl).parent();
-      // Ensure parentBox does not contain multiple category headings
-      const subHeadings = parentBox.find("#heading, .heading, h2, h3, th").filter((__, sh) => {
-        return matchCategoryKey($(sh).text()) !== null;
+    const countDistinctCategoryHeadings = (container: cheerio.Cheerio<any>): number => {
+      const found = new Set<string>();
+      container.find("#heading, .heading, h1, h2, h3, h4, th, b, strong, a").each((__, sh) => {
+        if ($(sh).find("ul, ol").length === 0) {
+          const k = matchCategoryKey($(sh).text());
+          if (k) found.add(k);
+        }
       });
-      if (subHeadings.length <= 1) {
-        linkNodes = parentBox.find("ul li a, #post li a");
-      }
+      return found.size;
+    };
+
+    // 1. Direct sibling #post / ul
+    let linkNodes = $(headingEl)
+      .nextAll("#post, ul, div")
+      .filter((__, el) => $(el).is("ul") || $(el).find("ul li a, li a").length > 0)
+      .first();
+
+    if (linkNodes.length > 0 && countDistinctCategoryHeadings(linkNodes) > 1) {
+      linkNodes = $();
     }
 
+    // 2. Table row sibling (<tr><th>Heading</th></tr><tr><td><ul>...</ul></td></tr>)
     if (linkNodes.length === 0) {
       const nextRow = $(headingEl).closest("tr").next("tr");
-      if (nextRow.length > 0 && nextRow.find("th, #heading").length === 0) {
-        linkNodes = nextRow.find("ul li a, li a");
+      if (nextRow.length > 0 && nextRow.find("ul li a, li a").length > 0 && countDistinctCategoryHeadings(nextRow) <= 1) {
+        linkNodes = nextRow;
       }
     }
 
-    linkNodes.each((__, linkEl) => {
+    // 3. Walk up to smallest ancestor containing <ul><li><a> with <= 1 category heading
+    if (linkNodes.length === 0) {
+      const parents = $(headingEl).parents().slice(0, 5);
+      parents.each((__, p) => {
+        if (linkNodes.length > 0) return;
+        const anc = $(p);
+        if (anc.find("ul li a, li a").length > 0) {
+          if (countDistinctCategoryHeadings(anc) <= 1) {
+            linkNodes = anc;
+          } else {
+            return false; // Stop walking up once we hit a multi-column wrapper
+          }
+        }
+      });
+    }
+
+    if (linkNodes.length === 0) return;
+
+    linkNodes.find("li a").each((__, linkEl) => {
       const title = $(linkEl).text().replace(/\s+/g, " ").trim();
       const rawHref = $(linkEl).attr("href")?.trim() || "";
 

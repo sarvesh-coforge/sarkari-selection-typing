@@ -8,7 +8,7 @@ export async function POST() {
     const snapshot = await runRollingSarkariSync();
     return NextResponse.json({
       success: true,
-      message: `Synced live SarkariResult data (v${snapshot.version}). Retained latest 3 versions in MongoDB.`,
+      message: `Synced live Sarkari Selection updates (v${snapshot.version}). Retained latest 3 versions in MongoDB.`,
       snapshot,
     });
   } catch (error: any) {
@@ -16,7 +16,7 @@ export async function POST() {
     return NextResponse.json(
       {
         success: false,
-        error: error?.message || "Failed to sync live SarkariResult updates",
+        error: error?.message || "Failed to sync live Sarkari Selection updates",
       },
       { status: 500 }
     );

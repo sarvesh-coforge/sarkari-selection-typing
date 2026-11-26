@@ -13,9 +13,9 @@ export default function SiteNavbar({ authButtonText, onOpenAuth }: SiteNavbarPro
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const isHome = pathname === "/";
+  const isHome = pathname === "/home";
   const isTypingTest = pathname.startsWith("/typing-test") || pathname === "/typing";
-  const isExamMode = pathname.startsWith("/exam-mode");
+  const isExamMode = pathname === "/" || pathname.startsWith("/exam-mode");
   const isTutor = pathname.startsWith("/typing-tutor");
   const isTools = pathname.startsWith("/tools");
   const isGame = pathname.startsWith("/word-blaster");
@@ -62,7 +62,7 @@ export default function SiteNavbar({ authButtonText, onOpenAuth }: SiteNavbarPro
           {/* Desktop Navigation Menu */}
           <nav className="hidden xl:flex items-center space-x-1.5 shrink-0">
             <Link
-              href="/"
+              href="/home"
               className={`px-3 py-2 rounded-lg text-sm font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
                 isHome ? "bg-white/15 text-amber-300 shadow-inner" : "text-white hover:bg-white/10"
               }`}
@@ -232,7 +232,7 @@ export default function SiteNavbar({ authButtonText, onOpenAuth }: SiteNavbarPro
       {mobileMenuOpen && (
         <div className="xl:hidden bg-blue-900 border-t border-blue-800 px-4 pt-3 pb-5 space-y-2">
           <Link
-            href="/"
+            href="/home"
             onClick={() => setMobileMenuOpen(false)}
             className={`block w-full text-left px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-800 ${
               isHome ? "bg-white/15 text-amber-300 font-bold" : ""

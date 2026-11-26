@@ -16,7 +16,7 @@ export async function GET() {
     return NextResponse.json(
       {
         success: false,
-        error: error?.message || "Failed to load live SarkariResult updates",
+        error: error?.message || "Failed to load live Sarkari Selection updates",
       },
       { status: 500 }
     );

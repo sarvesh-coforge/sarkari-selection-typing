@@ -42,7 +42,7 @@ export default function SiteFooter({ onOpenFeedback }: SiteFooterProps) {
             <h4 className="text-white font-bold text-sm uppercase tracking-wider mb-3">Quick Links</h4>
             <ul className="space-y-2 text-xs font-medium">
               <li>
-                <Link href="/" className="hover:text-white transition">
+                <Link href="/home" className="hover:text-white transition">
                   Home
                 </Link>
               </li>

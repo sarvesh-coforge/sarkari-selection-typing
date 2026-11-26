@@ -1,7 +1,5 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import RootTypingPortalPage from "../page";
-
-export default function TypingRoute() {
-  return <RootTypingPortalPage />;
+export default function TypingRedirectPage() {
+  redirect("/typing-test");
 }

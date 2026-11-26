@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import AppShell from "@/components/AppShell";
 
 export const metadata: Metadata = {
   title: "Sarkari Selection • India's Leading Govt Jobs, Results & Typing Exam Platform",
@@ -23,7 +24,7 @@ export default function RootLayout({
         />
       </head>
       <body className="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col justify-between">
-        {children}
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

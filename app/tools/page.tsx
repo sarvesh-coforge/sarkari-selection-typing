@@ -126,7 +126,7 @@ function ToolsContent() {
               className="w-full bg-slate-50 border border-slate-300 rounded-xl p-4 font-mono text-lg h-32 focus:ring-2 focus:ring-blue-500 focus:outline-none"
             ></textarea>
 
-            <div className="bg-slate-100 p-4 rounded-xl border border-slate-300 grid grid-cols-10 gap-2 text-center font-bold">
+            <div className="bg-slate-100 p-3 sm:p-4 rounded-xl border border-slate-300 grid grid-cols-5 sm:grid-cols-10 gap-2 text-center font-bold">
               {["क", "ख", "ग", "घ", "च", "छ", "ज", "झ", "ट", "ठ"].map((k) => (
                 <button
                   key={k}

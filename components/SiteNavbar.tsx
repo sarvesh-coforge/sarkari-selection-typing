@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -9,9 +9,13 @@ interface SiteNavbarProps {
   onOpenAuth: (mode: "login" | "pricing") => void;
 }
 
+type DropdownKey = "test" | "tutor" | "tools" | null;
+
 export default function SiteNavbar({ authButtonText, onOpenAuth }: SiteNavbarProps) {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<DropdownKey>(null);
+  const navRef = useRef<HTMLElement>(null);
 
   const isHome = pathname === "/home";
   const isTypingTest = pathname.startsWith("/typing-test") || pathname === "/typing";
@@ -21,17 +25,49 @@ export default function SiteNavbar({ authButtonText, onOpenAuth }: SiteNavbarPro
   const isGame = pathname.startsWith("/word-blaster");
   const isBlog = pathname.startsWith("/blog");
 
+  // Close menus on route change
+  useEffect(() => {
+    setOpenDropdown(null);
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (navRef.current && !navRef.current.contains(e.target as Node)) {
+        setOpenDropdown(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const navItemClass = (active: boolean) =>
+    `px-2.5 py-2 rounded-lg text-[13px] xl:text-sm font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${
+      active
+        ? "bg-white/15 text-amber-300 shadow-inner ring-1 ring-white/20"
+        : "text-white/95 hover:text-white hover:bg-white/10"
+    }`;
+
+  const mobileItemClass = (active: boolean) =>
+    `flex items-center gap-2.5 w-full text-left px-3.5 py-2.5 rounded-xl text-sm font-semibold transition ${
+      active ? "bg-white/15 text-amber-300 font-bold" : "text-white/90 hover:bg-white/10 hover:text-white"
+    }`;
+
   return (
-    <header className="bg-gradient-to-r from-[#1e3a8a] to-[#1e40af] text-white shadow-md sticky top-0 z-40">
+    <header
+      ref={navRef}
+      className="bg-gradient-to-r from-[#1e3a8a] via-[#1d4ed8] to-[#1e40af] text-white shadow-md border-b border-blue-950/30 sticky top-0 z-40"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex items-center justify-between h-16 gap-3">
           {/* Logo & Brand */}
-          <Link href="/" className="flex items-center space-x-3 cursor-pointer shrink-0 py-2">
+          <Link href="/" className="flex items-center space-x-2.5 cursor-pointer shrink-0 group">
             <svg
-              width="40"
-              height="40"
-              style={{ width: "40px", height: "40px", minWidth: "40px", maxWidth: "40px", flexShrink: 0 }}
-              className="w-10 h-10 shrink-0 drop-shadow"
+              width="38"
+              height="38"
+              style={{ width: "38px", height: "38px", minWidth: "38px", maxWidth: "38px", flexShrink: 0 }}
+              className="w-9 h-9 shrink-0 drop-shadow group-hover:scale-105 transition-transform"
               viewBox="0 0 100 100"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
@@ -50,177 +86,203 @@ export default function SiteNavbar({ authButtonText, onOpenAuth }: SiteNavbarPro
                 SS
               </text>
             </svg>
-            <div className="flex flex-col">
-              <div className="flex items-center gap-1.5">
-                <span className="text-xl sm:text-2xl font-black tracking-tight text-white whitespace-nowrap uppercase">
-                  Sarkari <span className="text-amber-400">Selection</span>
-                </span>
-              </div>
-            </div>
+            <span className="text-base sm:text-xl font-black tracking-tight text-white whitespace-nowrap uppercase">
+              Sarkari <span className="text-amber-400">Selection</span>
+            </span>
           </Link>
 
           {/* Desktop Navigation Menu */}
-          <nav className="hidden xl:flex items-center space-x-1.5 shrink-0">
-            <Link
-              href="/home"
-              className={`px-3 py-2 rounded-lg text-sm font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
-                isHome ? "bg-white/15 text-amber-300 shadow-inner" : "text-white hover:bg-white/10"
-              }`}
-            >
-              <i className="fa-solid fa-house"></i> Home
+          <nav className="hidden xl:flex items-center space-x-1 shrink-0">
+            <Link href="/home" className={navItemClass(isHome)}>
+              <i className="fa-solid fa-house text-xs"></i>
+              <span>Home</span>
             </Link>
 
             {/* Typing Test Dropdown */}
-            <div className="relative group">
+            <div
+              className="relative"
+              onMouseEnter={() => setOpenDropdown("test")}
+              onMouseLeave={() => setOpenDropdown(null)}
+            >
               <Link
                 href="/typing-test"
-                className={`px-3 py-2 rounded-lg text-sm font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
-                  isTypingTest ? "bg-white/15 text-amber-300 shadow-inner" : "text-white hover:bg-white/10"
-                }`}
+                onClick={() => setOpenDropdown(null)}
+                className={navItemClass(isTypingTest)}
               >
-                <i className="fa-solid fa-stopwatch"></i> Typing Test{" "}
-                <i className="fa-solid fa-chevron-down text-xs"></i>
+                <i className="fa-solid fa-stopwatch text-xs"></i>
+                <span>Typing Test</span>
+                <i
+                  className={`fa-solid fa-chevron-down text-[10px] transition-transform duration-150 ${
+                    openDropdown === "test" ? "rotate-180" : ""
+                  }`}
+                ></i>
               </Link>
-              <div className="absolute left-0 mt-0 w-48 bg-white text-slate-800 rounded-lg shadow-xl py-2 hidden group-hover:block border border-slate-200 z-50">
-                <Link
-                  href="/typing-test?lang=english"
-                  className="block px-4 py-2 text-sm hover:bg-slate-100 font-medium whitespace-nowrap"
-                >
-                  <i className="fa-solid fa-globe mr-2 text-blue-600"></i> English Test
-                </Link>
-                <Link
-                  href="/typing-test?lang=hindi"
-                  className="block px-4 py-2 text-sm hover:bg-slate-100 font-medium whitespace-nowrap"
-                >
-                  <i className="fa-solid fa-language mr-2 text-blue-600"></i> Hindi Test
-                </Link>
-                <Link
-                  href="/typing-test?lang=punjabi"
-                  className="block px-4 py-2 text-sm hover:bg-slate-100 font-medium whitespace-nowrap"
-                >
-                  <i className="fa-solid fa-feather mr-2 text-blue-600"></i> Punjabi Test
-                </Link>
-                <Link
-                  href="/typing-test?lang=marathi"
-                  className="block px-4 py-2 text-sm hover:bg-slate-100 font-medium whitespace-nowrap"
-                >
-                  <i className="fa-solid fa-pen-nib mr-2 text-blue-600"></i> Marathi Test
-                </Link>
-              </div>
+              {openDropdown === "test" && (
+                <div className="absolute left-0 top-full pt-1.5 w-48 z-50">
+                  <div className="bg-white text-slate-800 rounded-xl shadow-2xl py-1.5 border border-slate-200">
+                    <Link
+                      href="/typing-test?lang=english"
+                      onClick={() => setOpenDropdown(null)}
+                      className="flex items-center gap-2.5 px-4 py-2 text-sm hover:bg-blue-50 hover:text-blue-700 font-semibold whitespace-nowrap transition"
+                    >
+                      <i className="fa-solid fa-globe text-blue-600 w-4 text-center"></i> English Test
+                    </Link>
+                    <Link
+                      href="/typing-test?lang=hindi"
+                      onClick={() => setOpenDropdown(null)}
+                      className="flex items-center gap-2.5 px-4 py-2 text-sm hover:bg-blue-50 hover:text-blue-700 font-semibold whitespace-nowrap transition"
+                    >
+                      <i className="fa-solid fa-language text-blue-600 w-4 text-center"></i> Hindi Test
+                    </Link>
+                    <Link
+                      href="/typing-test?lang=punjabi"
+                      onClick={() => setOpenDropdown(null)}
+                      className="flex items-center gap-2.5 px-4 py-2 text-sm hover:bg-blue-50 hover:text-blue-700 font-semibold whitespace-nowrap transition"
+                    >
+                      <i className="fa-solid fa-feather text-blue-600 w-4 text-center"></i> Punjabi Test
+                    </Link>
+                    <Link
+                      href="/typing-test?lang=marathi"
+                      onClick={() => setOpenDropdown(null)}
+                      className="flex items-center gap-2.5 px-4 py-2 text-sm hover:bg-blue-50 hover:text-blue-700 font-semibold whitespace-nowrap transition"
+                    >
+                      <i className="fa-solid fa-pen-nib text-blue-600 w-4 text-center"></i> Marathi Test
+                    </Link>
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Exam Menu */}
-            <Link
-              href="/exam-mode"
-              className={`px-3 py-2 rounded-lg text-sm font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
-                isExamMode ? "bg-white/15 text-amber-300 shadow-inner" : "text-white hover:bg-white/10"
-              }`}
-            >
-              <i className="fa-solid fa-bullhorn text-amber-300"></i> Exam Mode
+            {/* Exam Mode */}
+            <Link href="/exam-mode" className={navItemClass(isExamMode)}>
+              <i className="fa-solid fa-bullhorn text-xs text-amber-300"></i>
+              <span>Exam Mode</span>
             </Link>
 
             {/* Typing Tutor Dropdown */}
-            <div className="relative group">
+            <div
+              className="relative"
+              onMouseEnter={() => setOpenDropdown("tutor")}
+              onMouseLeave={() => setOpenDropdown(null)}
+            >
               <Link
                 href="/typing-tutor"
-                className={`px-3 py-2 rounded-md text-sm font-semibold hover:bg-blue-800 transition flex items-center gap-1.5 whitespace-nowrap ${
-                  isTutor ? "bg-white/15 text-amber-300 font-bold shadow-inner" : "text-white"
-                }`}
+                onClick={() => setOpenDropdown(null)}
+                className={navItemClass(isTutor)}
               >
-                <i className="fa-solid fa-chalkboard-user"></i> Typing Tutor{" "}
-                <i className="fa-solid fa-chevron-down text-xs"></i>
+                <i className="fa-solid fa-chalkboard-user text-xs"></i>
+                <span>Typing Tutor</span>
+                <i
+                  className={`fa-solid fa-chevron-down text-[10px] transition-transform duration-150 ${
+                    openDropdown === "tutor" ? "rotate-180" : ""
+                  }`}
+                ></i>
               </Link>
-              <div className="absolute left-0 mt-0 w-52 bg-white text-slate-800 rounded-lg shadow-xl py-2 hidden group-hover:block border border-slate-200 z-50">
-                <Link
-                  href="/typing-tutor?type=english"
-                  className="block px-4 py-2 text-sm hover:bg-slate-100 font-medium whitespace-nowrap"
-                >
-                  English Tutor
-                </Link>
-                <Link
-                  href="/typing-tutor?type=krutidev"
-                  className="block px-4 py-2 text-sm hover:bg-slate-100 font-medium whitespace-nowrap"
-                >
-                  KrutiDev Hindi Tutor
-                </Link>
-                <Link
-                  href="/typing-tutor?type=mangal"
-                  className="block px-4 py-2 text-sm hover:bg-slate-100 font-medium whitespace-nowrap"
-                >
-                  Mangal Inscript Tutor
-                </Link>
-              </div>
+              {openDropdown === "tutor" && (
+                <div className="absolute left-0 top-full pt-1.5 w-52 z-50">
+                  <div className="bg-white text-slate-800 rounded-xl shadow-2xl py-1.5 border border-slate-200">
+                    <Link
+                      href="/typing-tutor?type=english"
+                      onClick={() => setOpenDropdown(null)}
+                      className="flex items-center gap-2.5 px-4 py-2 text-sm hover:bg-blue-50 hover:text-blue-700 font-semibold whitespace-nowrap transition"
+                    >
+                      <i className="fa-solid fa-keyboard text-emerald-600 w-4 text-center"></i> English Tutor
+                    </Link>
+                    <Link
+                      href="/typing-tutor?type=krutidev"
+                      onClick={() => setOpenDropdown(null)}
+                      className="flex items-center gap-2.5 px-4 py-2 text-sm hover:bg-blue-50 hover:text-blue-700 font-semibold whitespace-nowrap transition"
+                    >
+                      <i className="fa-solid fa-font text-emerald-600 w-4 text-center"></i> KrutiDev Hindi Tutor
+                    </Link>
+                    <Link
+                      href="/typing-tutor?type=mangal"
+                      onClick={() => setOpenDropdown(null)}
+                      className="flex items-center gap-2.5 px-4 py-2 text-sm hover:bg-blue-50 hover:text-blue-700 font-semibold whitespace-nowrap transition"
+                    >
+                      <i className="fa-solid fa-language text-emerald-600 w-4 text-center"></i> Mangal Inscript Tutor
+                    </Link>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Tools & Converters Dropdown */}
-            <div className="relative group">
+            <div
+              className="relative"
+              onMouseEnter={() => setOpenDropdown("tools")}
+              onMouseLeave={() => setOpenDropdown(null)}
+            >
               <Link
                 href="/tools"
-                className={`px-3 py-2 rounded-md text-sm font-semibold hover:bg-blue-800 transition flex items-center gap-1.5 whitespace-nowrap ${
-                  isTools ? "bg-white/15 text-amber-300 font-bold shadow-inner" : "text-white"
-                }`}
+                onClick={() => setOpenDropdown(null)}
+                className={navItemClass(isTools)}
               >
-                <i className="fa-solid fa-screwdriver-wrench"></i> Tools{" "}
-                <i className="fa-solid fa-chevron-down text-xs"></i>
+                <i className="fa-solid fa-screwdriver-wrench text-xs"></i>
+                <span>Tools</span>
+                <i
+                  className={`fa-solid fa-chevron-down text-[10px] transition-transform duration-150 ${
+                    openDropdown === "tools" ? "rotate-180" : ""
+                  }`}
+                ></i>
               </Link>
-              <div className="absolute left-0 mt-0 w-56 bg-white text-slate-800 rounded-lg shadow-xl py-2 hidden group-hover:block border border-slate-200 z-50">
-                <Link
-                  href="/tools?tool=converter"
-                  className="block px-4 py-2 text-sm hover:bg-slate-100 font-medium whitespace-nowrap"
-                >
-                  <i className="fa-solid fa-font mr-2 text-indigo-600"></i> Krutidev to Unicode
-                </Link>
-                <Link
-                  href="/tools?tool=keyboard"
-                  className="block px-4 py-2 text-sm hover:bg-slate-100 font-medium whitespace-nowrap"
-                >
-                  <i className="fa-solid fa-keyboard mr-2 text-indigo-600"></i> Virtual Keyboard
-                </Link>
-                <Link
-                  href="/tools?tool=translator"
-                  className="block px-4 py-2 text-sm hover:bg-slate-100 font-medium whitespace-nowrap"
-                >
-                  <i className="fa-solid fa-language mr-2 text-indigo-600"></i> Translator
-                </Link>
-              </div>
+              {openDropdown === "tools" && (
+                <div className="absolute left-0 top-full pt-1.5 w-56 z-50">
+                  <div className="bg-white text-slate-800 rounded-xl shadow-2xl py-1.5 border border-slate-200">
+                    <Link
+                      href="/tools?tool=converter"
+                      onClick={() => setOpenDropdown(null)}
+                      className="flex items-center gap-2.5 px-4 py-2 text-sm hover:bg-blue-50 hover:text-blue-700 font-semibold whitespace-nowrap transition"
+                    >
+                      <i className="fa-solid fa-font text-indigo-600 w-4 text-center"></i> Krutidev to Unicode
+                    </Link>
+                    <Link
+                      href="/tools?tool=keyboard"
+                      onClick={() => setOpenDropdown(null)}
+                      className="flex items-center gap-2.5 px-4 py-2 text-sm hover:bg-blue-50 hover:text-blue-700 font-semibold whitespace-nowrap transition"
+                    >
+                      <i className="fa-solid fa-keyboard text-indigo-600 w-4 text-center"></i> Virtual Keyboard
+                    </Link>
+                    <Link
+                      href="/tools?tool=translator"
+                      onClick={() => setOpenDropdown(null)}
+                      className="flex items-center gap-2.5 px-4 py-2 text-sm hover:bg-blue-50 hover:text-blue-700 font-semibold whitespace-nowrap transition"
+                    >
+                      <i className="fa-solid fa-language text-indigo-600 w-4 text-center"></i> Translator
+                    </Link>
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Games Menu */}
-            <Link
-              href="/word-blaster"
-              className={`px-3 py-2 rounded-md text-sm font-semibold hover:bg-blue-800 transition flex items-center gap-1.5 whitespace-nowrap ${
-                isGame ? "bg-white/15 text-amber-300 font-bold shadow-inner" : "text-white"
-              }`}
-            >
-              <i className="fa-solid fa-gamepad"></i> Word Blaster Game
+            {/* Word Blaster Game */}
+            <Link href="/word-blaster" className={navItemClass(isGame)}>
+              <i className="fa-solid fa-gamepad text-xs"></i>
+              <span>Word Blaster Game</span>
             </Link>
 
-            {/* Blog & Info */}
-            <Link
-              href="/blog"
-              className={`px-3 py-2 rounded-md text-sm font-semibold hover:bg-blue-800 transition flex items-center gap-1.5 whitespace-nowrap ${
-                isBlog ? "bg-white/15 text-amber-300 font-bold shadow-inner" : "text-white"
-              }`}
-            >
-              <i className="fa-solid fa-blog"></i> Blog &amp; FAQ
+            {/* Blog & FAQ */}
+            <Link href="/blog" className={navItemClass(isBlog)}>
+              <i className="fa-solid fa-blog text-xs"></i>
+              <span>Blog &amp; FAQ</span>
             </Link>
           </nav>
 
-          {/* Auth Actions */}
-          <div className="flex items-center space-x-2.5 shrink-0">
+          {/* Auth & Mobile Toggle */}
+          <div className="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
             <button
               onClick={() => onOpenAuth("pricing")}
-              className="bg-amber-400 hover:bg-amber-300 text-slate-900 font-black px-4 py-2 rounded-lg text-sm shadow transition flex items-center gap-1.5 whitespace-nowrap"
+              className="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black px-2.5 sm:px-3.5 py-2 rounded-xl text-xs sm:text-sm shadow-sm hover:shadow transition flex items-center gap-1.5 whitespace-nowrap"
             >
               <i className="fa-solid fa-crown text-amber-800"></i>
               <span>{authButtonText}</span>
             </button>
 
-            {/* Mobile Menu Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="xl:hidden text-white focus:outline-none p-2 rounded-md hover:bg-blue-800"
+              className="xl:hidden text-white focus:outline-none p-2 rounded-lg hover:bg-white/10 transition"
               aria-label="Toggle Navigation Menu"
+              aria-expanded={mobileMenuOpen}
             >
               <i className={`fa-solid ${mobileMenuOpen ? "fa-xmark" : "fa-bars"} text-xl`}></i>
             </button>
@@ -230,73 +292,60 @@ export default function SiteNavbar({ authButtonText, onOpenAuth }: SiteNavbarPro
 
       {/* Mobile Nav Drawer */}
       {mobileMenuOpen && (
-        <div className="xl:hidden bg-blue-900 border-t border-blue-800 px-4 pt-3 pb-5 space-y-2">
-          <Link
-            href="/home"
-            onClick={() => setMobileMenuOpen(false)}
-            className={`block w-full text-left px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-800 ${
-              isHome ? "bg-white/15 text-amber-300 font-bold" : ""
-            }`}
-          >
-            <i className="fa-solid fa-house mr-2"></i> Home
+        <div className="xl:hidden bg-[#172554] border-t border-blue-800/80 px-4 pt-3 pb-5 space-y-1.5 shadow-xl max-h-[calc(100vh-4rem)] overflow-y-auto">
+          <Link href="/home" onClick={() => setMobileMenuOpen(false)} className={mobileItemClass(isHome)}>
+            <i className="fa-solid fa-house w-5 text-center"></i>
+            <span>Home</span>
           </Link>
-          <Link
-            href="/typing-test"
-            onClick={() => setMobileMenuOpen(false)}
-            className={`block w-full text-left px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-800 ${
-              isTypingTest ? "bg-white/15 text-amber-300 font-bold" : ""
-            }`}
-          >
-            <i className="fa-solid fa-stopwatch mr-2"></i> Typing Tests
+
+          <Link href="/typing-test" onClick={() => setMobileMenuOpen(false)} className={mobileItemClass(isTypingTest)}>
+            <i className="fa-solid fa-stopwatch w-5 text-center"></i>
+            <span>Typing Tests</span>
           </Link>
-          <Link
-            href="/exam-mode"
-            onClick={() => setMobileMenuOpen(false)}
-            className={`block w-full text-left px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-800 text-amber-300 ${
-              isExamMode ? "bg-white/15 font-bold" : ""
-            }`}
-          >
-            <i className="fa-solid fa-graduation-cap mr-2"></i> Exam Mode
+          <div className="pl-9 grid grid-cols-2 gap-1 pb-1">
+            {[
+              { label: "English Test", href: "/typing-test?lang=english" },
+              { label: "Hindi Test", href: "/typing-test?lang=hindi" },
+              { label: "Punjabi Test", href: "/typing-test?lang=punjabi" },
+              { label: "Marathi Test", href: "/typing-test?lang=marathi" },
+            ].map((sub) => (
+              <Link
+                key={sub.href}
+                href={sub.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className="text-xs text-blue-200 hover:text-white py-1 px-2 rounded-lg hover:bg-white/10 transition"
+              >
+                {sub.label}
+              </Link>
+            ))}
+          </div>
+
+          <Link href="/exam-mode" onClick={() => setMobileMenuOpen(false)} className={mobileItemClass(isExamMode)}>
+            <i className="fa-solid fa-bullhorn w-5 text-center text-amber-300"></i>
+            <span>Exam Mode</span>
           </Link>
-          <Link
-            href="/typing-tutor"
-            onClick={() => setMobileMenuOpen(false)}
-            className={`block w-full text-left px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-800 ${
-              isTutor ? "bg-white/15 text-amber-300 font-bold" : ""
-            }`}
-          >
-            <i className="fa-solid fa-chalkboard-user mr-2"></i> Typing Tutor
+
+          <Link href="/typing-tutor" onClick={() => setMobileMenuOpen(false)} className={mobileItemClass(isTutor)}>
+            <i className="fa-solid fa-chalkboard-user w-5 text-center"></i>
+            <span>Typing Tutor</span>
           </Link>
-          <Link
-            href="/tools"
-            onClick={() => setMobileMenuOpen(false)}
-            className={`block w-full text-left px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-800 ${
-              isTools ? "bg-white/15 text-amber-300 font-bold" : ""
-            }`}
-          >
-            <i className="fa-solid fa-screwdriver-wrench mr-2"></i> Tools &amp; Converters
+
+          <Link href="/tools" onClick={() => setMobileMenuOpen(false)} className={mobileItemClass(isTools)}>
+            <i className="fa-solid fa-screwdriver-wrench w-5 text-center"></i>
+            <span>Tools &amp; Converters</span>
           </Link>
-          <Link
-            href="/word-blaster"
-            onClick={() => setMobileMenuOpen(false)}
-            className={`block w-full text-left px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-800 ${
-              isGame ? "bg-white/15 text-amber-300 font-bold" : ""
-            }`}
-          >
-            <i className="fa-solid fa-gamepad mr-2"></i> Word Blaster Game
+
+          <Link href="/word-blaster" onClick={() => setMobileMenuOpen(false)} className={mobileItemClass(isGame)}>
+            <i className="fa-solid fa-gamepad w-5 text-center"></i>
+            <span>Word Blaster Game</span>
           </Link>
-          <Link
-            href="/blog"
-            onClick={() => setMobileMenuOpen(false)}
-            className={`block w-full text-left px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-800 ${
-              isBlog ? "bg-white/15 text-amber-300 font-bold" : ""
-            }`}
-          >
-            <i className="fa-solid fa-blog mr-2"></i> Blog &amp; FAQ
+
+          <Link href="/blog" onClick={() => setMobileMenuOpen(false)} className={mobileItemClass(isBlog)}>
+            <i className="fa-solid fa-blog w-5 text-center"></i>
+            <span>Blog &amp; FAQ</span>
           </Link>
         </div>
       )}
     </header>
   );
 }
-

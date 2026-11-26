@@ -207,11 +207,11 @@ export default function ExamModeView() {
           </div>
 
           {/* Interactive View Switcher */}
-          <div className="inline-flex bg-slate-100 p-1 rounded-xl border border-slate-200 self-start lg:self-auto shrink-0">
+          <div className="flex flex-wrap sm:inline-flex w-full sm:w-auto bg-slate-100 p-1 rounded-xl border border-slate-200 self-start lg:self-auto shrink-0 gap-1 sm:gap-0">
             <button
               type="button"
               onClick={() => setActiveView("boards")}
-              className={`px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2 ${
+              className={`flex-1 sm:flex-initial justify-center px-3 sm:px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2 ${
                 activeView === "boards"
                   ? "bg-white text-blue-900 shadow-sm"
                   : "text-slate-600 hover:text-slate-900"
@@ -228,7 +228,7 @@ export default function ExamModeView() {
             <button
               type="button"
               onClick={() => setActiveView("simulator")}
-              className={`px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2 ${
+              className={`flex-1 sm:flex-initial justify-center px-3 sm:px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2 ${
                 activeView === "simulator"
                   ? "bg-white text-amber-900 shadow-sm"
                   : "text-slate-600 hover:text-slate-900"
@@ -313,19 +313,19 @@ export default function ExamModeView() {
                     key={card.key}
                     type="button"
                     onClick={() => setLiveBoardTab(card.key)}
-                    className={`p-3.5 rounded-xl border text-left transition-all flex items-center justify-between gap-3 ${
+                    className={`p-3 sm:p-3.5 rounded-xl border text-left transition-all flex items-center justify-between gap-2 sm:gap-3 ${
                       isActive ? `ring-2 ${card.ring} border-transparent shadow-md` : card.idle
                     }`}
                   >
-                    <div>
-                      <div className={`text-[11px] font-bold uppercase tracking-wider ${isActive ? "text-white/80" : "text-slate-500"}`}>
+                    <div className="min-w-0">
+                      <div className={`text-[10px] sm:text-[11px] font-bold uppercase tracking-wider truncate ${isActive ? "text-white/80" : "text-slate-500"}`}>
                         {card.label}
                       </div>
-                      <div className="text-2xl font-black mt-0.5">
+                      <div className="text-xl sm:text-2xl font-black mt-0.5">
                         {isLoading ? "—" : card.count}
                       </div>
                     </div>
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg ${isActive ? "bg-white/15 text-white" : `bg-white shadow-sm ${card.iconColor}`}`}>
+                    <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-sm sm:text-lg shrink-0 ${isActive ? "bg-white/15 text-white" : `bg-white shadow-sm ${card.iconColor}`}`}>
                       <i className={`fa-solid ${card.icon}`}></i>
                     </div>
                   </button>
